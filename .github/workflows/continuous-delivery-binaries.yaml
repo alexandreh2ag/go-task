@@ -38,6 +38,5 @@ jobs:
           ./upload.sh ./bin/gtask-linux-amd64 application/x-binary
           ./upload.sh ./bin/gtask-linux-armv7 application/x-binary
           ./upload.sh ./bin/gtask-linux-arm64 application/x-binary
-          ./upload.sh ./bin/gtask-windows-amd64.exe application/x-binary
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}

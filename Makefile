@@ -6,7 +6,7 @@ PWD         ?= $(shell pwd)
 VERSION     ?= $(shell git describe --tags)
 REVISION    ?= $(shell git rev-parse HEAD)
 
-.PHONY: build build-darwin-amd64 build-linux-amd64 build-linux-armv7 build-linux-arm64 build-windows-amd64 clean release release-major release-minor release-patch
+.PHONY: build build-darwin-amd64 build-linux-amd64 build-linux-armv7 build-linux-arm64 clean release release-major release-minor release-patch
 
 build:
 	for target in $(WHAT); do \
@@ -50,17 +50,10 @@ build-linux-arm64:
 		-o ./bin/$$target-linux-arm64 ./main.go; \
 		done
 
-build-windows-amd64:
-	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
-			-o ./bin/$$target-windows-amd64.exe ./cmd/$$target/${WHAT}_windows.go; \
-	done
-
 clean:
 	rm -rf ./bin
 
-release: clean build-darwin-amd64 build-darwin-arm64 build-linux-amd64 build-linux-armv7 build-linux-arm64 build-windows-amd64
+release: clean build-darwin-amd64 build-darwin-arm64 build-linux-amd64 build-linux-armv7 build-linux-arm64
 
 release-major:
 	$(eval MAJORVERSION=$(shell git describe --tags --abbrev=0 | sed s/v// | awk -F. '{print "v"$$1+1".0.0"}'))
