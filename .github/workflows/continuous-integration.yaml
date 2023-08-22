@@ -63,10 +63,3 @@ jobs:
           name: gtask-linux-arm64
           path: bin/gtask-linux-arm64
           if-no-files-found: error
-
-      - name: Upload Artifacts (windows-amd64.exe)
-        uses: actions/upload-artifact@v2
-        with:
-          name: gtask-windows-amd64.exe
-          path: bin/gtask-windows-amd64.exe
-          if-no-files-found: error
