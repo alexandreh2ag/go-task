@@ -11,6 +11,7 @@ func main() {
 	rootCmd.AddCommand(
 		cli.GetWorkerCmd(ctx),
 		cli.GetScheduleCmd(ctx),
+		cli.GetValidateCmd(ctx),
 		cli.GetVersionCmd(),
 	)
 

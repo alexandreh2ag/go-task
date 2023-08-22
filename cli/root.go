@@ -2,6 +2,7 @@ package cli
 
 import (
 	appCtx "alexandreh2ag/go-task/context"
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"log/slog"
@@ -26,7 +27,7 @@ func GetRootCmd(ctx *appCtx.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               Name,
 		Short:             "go task: run & generate config for scheduled / cron task",
-		PersistentPreRunE: GetRootPreRunEFn(ctx),
+		PersistentPreRunE: GetRootPreRunEFn(ctx, true),
 	}
 
 	cmd.PersistentFlags().StringP(Config, "c", "", "Define config path")
@@ -37,23 +38,38 @@ func GetRootCmd(ctx *appCtx.Context) *cobra.Command {
 	return cmd
 }
 
-func GetRootPreRunEFn(ctx *appCtx.Context) func(*cobra.Command, []string) error {
+func GetRootPreRunEFn(ctx *appCtx.Context, validateCfg bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		var err error
-		//initConfig(ctx, cmd)
+		initConfig(ctx, cmd)
 
-		validate := validator.New()
-		err = validate.Struct(ctx.Config)
-		if err != nil {
-			return err
+		if validateCfg {
+			validate := validator.New()
+			err = validate.Struct(ctx.Config)
+			if err != nil {
+
+				var validationErrors validator.ValidationErrors
+				switch {
+				case errors.As(err, &validationErrors):
+					for _, validationError := range validationErrors {
+						ctx.Logger.Error(fmt.Sprintf("%v", validationError))
+					}
+					return errors.New("configuration file is not valid")
+				default:
+					return err
+				}
+			}
 		}
+
 		logLevelFlagStr, _ := cmd.Flags().GetString(LogLevel)
-		level := slog.LevelInfo
-		err = level.UnmarshalText([]byte(logLevelFlagStr))
-		if err != nil {
-			return err
+		if logLevelFlagStr != "" {
+			level := slog.LevelInfo
+			err = level.UnmarshalText([]byte(logLevelFlagStr))
+			if err != nil {
+				return err
+			}
+			ctx.LogLevel.Set(level)
 		}
-		ctx.LogLevel.Set(level)
 
 		return nil
 	}
@@ -85,9 +101,9 @@ func initConfig(ctx *appCtx.Context, cmd *cobra.Command) {
 
 	// If a config file is found, read it in.
 	if err = viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		ctx.Logger.Info(fmt.Sprintf("Using config file: %s", viper.ConfigFileUsed()))
 	} else {
-		fmt.Println("Config: " + err.Error())
+		panic(fmt.Sprintf("load config failed: %v", err.Error()))
 	}
 
 	err = viper.Unmarshal(ctx.Config)
