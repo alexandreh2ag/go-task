@@ -1,0 +1,72 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: make release
+
+      - name: Upload Artifacts (darwin-amd64)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-darwin-amd64
+          path: bin/gtask-darwin-amd64
+          if-no-files-found: error
+
+      - name: Upload Artifacts (darwin-arm64)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-darwin-arm64
+          path: bin/gtask-darwin-arm64
+          if-no-files-found: error
+
+      - name: Upload Artifacts (linux-amd64)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-linux-amd64
+          path: bin/gtask-linux-amd64
+          if-no-files-found: error
+
+      - name: Upload Artifacts (linux-armv7)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-linux-armv7
+          path: bin/gtask-linux-armv7
+          if-no-files-found: error
+
+      - name: Upload Artifacts (linux-arm64)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-linux-arm64
+          path: bin/gtask-linux-arm64
+          if-no-files-found: error
+
+      - name: Upload Artifacts (windows-amd64.exe)
+        uses: actions/upload-artifact@v2
+        with:
+          name: gtask-windows-amd64.exe
+          path: bin/gtask-windows-amd64.exe
+          if-no-files-found: error
