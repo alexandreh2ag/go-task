@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/adhocore/gronx v1.6.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect

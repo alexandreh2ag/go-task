@@ -55,3 +55,47 @@ func Test_WorkerTask_ErrorValidateComplex(t *testing.T) {
 	assert.Contains(t, err.Error(), "Field validation for 'User' failed on the 'alphanum' tag")
 	assert.Contains(t, err.Error(), "Field validation for 'Directory' failed on the 'dirpath' tag")
 }
+
+func TestPrepareWorkerTasks(t *testing.T) {
+	type args struct {
+		tasks      WorkerTasks
+		user       string
+		workingDir string
+	}
+	tests := []struct {
+		name string
+		args args
+		want WorkerTasks
+	}{
+		{
+			name: "SuccessEmptyTasks",
+			args: args{
+				tasks:      WorkerTasks{},
+				user:       "foo",
+				workingDir: "/app/foo/",
+			},
+			want: WorkerTasks{},
+		},
+		{
+			name: "SuccessMultipleTasks",
+			args: args{
+				tasks: WorkerTasks{
+					&WorkerTask{Id: "test", Command: "cmd"},
+					&WorkerTask{Id: "test2", Command: "cmd", User: "bar", Directory: "/app/bar/"},
+				},
+				user:       "foo",
+				workingDir: "/app/foo/",
+			},
+			want: WorkerTasks{
+				&WorkerTask{Id: "test", Command: "cmd", User: "foo", Directory: "/app/foo/"},
+				&WorkerTask{Id: "test2", Command: "cmd", User: "bar", Directory: "/app/bar/"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			PrepareWorkerTasks(tt.args.tasks, tt.args.user, tt.args.workingDir)
+			assert.Equal(t, tt.want, tt.args.tasks)
+		})
+	}
+}
