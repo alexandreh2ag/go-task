@@ -2,6 +2,7 @@ package context
 
 import (
 	"alexandreh2ag/go-task/config"
+	"github.com/spf13/afero"
 	"io"
 	"log/slog"
 
@@ -12,6 +13,7 @@ type Context struct {
 	Logger   *slog.Logger
 	LogLevel *slog.LevelVar
 	Config   *config.Config
+	Fs       afero.Fs
 }
 
 func DefaultContext() *Context {
@@ -23,6 +25,7 @@ func DefaultContext() *Context {
 		Logger:   slog.New(slog.NewTextHandler(os.Stdout, opts)),
 		LogLevel: level,
 		Config:   &cfg,
+		Fs:       afero.NewOsFs(),
 	}
 }
 
@@ -38,5 +41,6 @@ func TestContext(logBuffer io.Writer) *Context {
 		Logger:   slog.New(slog.NewTextHandler(logBuffer, opts)),
 		LogLevel: level,
 		Config:   &cfg,
+		Fs:       afero.NewMemMapFs(),
 	}
 }

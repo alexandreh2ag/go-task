@@ -73,7 +73,8 @@ func TestGetScheduleRunCmd_FailedWithTimezoneOpt(t *testing.T) {
 		&types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"},
 	}
 	cmd := GetScheduleRunCmd(ctx)
-
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
 	cmd.SetArgs([]string{"--" + TimeZone, "Europe/Wrong"})
 	err := cmd.Execute()
 	assert.Error(t, err)

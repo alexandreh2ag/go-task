@@ -3,6 +3,7 @@ package context
 import (
 	"alexandreh2ag/go-task/config"
 	"alexandreh2ag/go-task/types"
+	"github.com/spf13/afero"
 	"io"
 	"log/slog"
 	"os"
@@ -21,10 +22,12 @@ func TestDefaultContext(t *testing.T) {
 	level.Set(slog.LevelInfo)
 	opts := &slog.HandlerOptions{AddSource: false, Level: level}
 	logger := slog.New(slog.NewTextHandler(os.Stdout, opts))
+	fs := afero.NewOsFs()
 	want := &Context{
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Fs:       fs,
 	}
 	got := DefaultContext()
 
@@ -41,15 +44,18 @@ func TestTestContext(t *testing.T) {
 	level.Set(slog.LevelInfo)
 	opts := &slog.HandlerOptions{AddSource: false, Level: level}
 	logger := slog.New(slog.NewTextHandler(io.Discard, opts))
+	fs := afero.NewMemMapFs()
 	want := &Context{
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Fs:       fs,
 	}
 	got := TestContext(nil)
 
 	assert.Equal(t, want, got)
 }
+
 func TestTestContext_WithLogBuffer(t *testing.T) {
 
 	cfg := &config.Config{
@@ -60,10 +66,12 @@ func TestTestContext_WithLogBuffer(t *testing.T) {
 	level.Set(slog.LevelInfo)
 	opts := &slog.HandlerOptions{AddSource: false, Level: level}
 	logger := slog.New(slog.NewTextHandler(io.Discard, opts))
+	fs := afero.NewMemMapFs()
 	want := &Context{
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Fs:       fs,
 	}
 	got := TestContext(io.Discard)
 
