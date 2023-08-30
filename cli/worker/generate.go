@@ -3,6 +3,7 @@ package worker
 import (
 	"alexandreh2ag/go-task/cli/flags"
 	"alexandreh2ag/go-task/context"
+	"alexandreh2ag/go-task/types"
 	"fmt"
 	"github.com/spf13/cobra"
 )
@@ -35,6 +36,10 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 func GetWorkerGenerateRunFn(ctx *context.Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		format, _ := cmd.Flags().GetString(Format)
+		user, _ := cmd.Flags().GetString(flags.User)
+		workingDir, _ := cmd.Flags().GetString(flags.WorkingDir)
+
+		types.PrepareWorkerTasks(ctx.Config.Workers, user, workingDir)
 		switch format {
 		case FormatSupervisor:
 			ctx.Logger.Info(fmt.Sprintf("Generate format type %s", FormatSupervisor))
