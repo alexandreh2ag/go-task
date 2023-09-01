@@ -3,6 +3,7 @@ package context
 import (
 	"alexandreh2ag/go-task/config"
 	"alexandreh2ag/go-task/types"
+	"github.com/jonboulle/clockwork"
 	"github.com/spf13/afero"
 	"io"
 	"log/slog"
@@ -27,10 +28,12 @@ func TestDefaultContext(t *testing.T) {
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Clock:    clockwork.NewRealClock(),
 		Fs:       fs,
 	}
 	got := DefaultContext()
-
+	assert.NotNil(t, got.done)
+	got.done = nil
 	assert.Equal(t, want, got)
 }
 
@@ -49,10 +52,12 @@ func TestTestContext(t *testing.T) {
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Clock:    clockwork.NewRealClock(),
 		Fs:       fs,
 	}
 	got := TestContext(nil)
-
+	assert.NotNil(t, got.done)
+	got.done = nil
 	assert.Equal(t, want, got)
 }
 
@@ -71,9 +76,11 @@ func TestTestContext_WithLogBuffer(t *testing.T) {
 		Config:   cfg,
 		Logger:   logger,
 		LogLevel: level,
+		Clock:    clockwork.NewRealClock(),
 		Fs:       fs,
 	}
 	got := TestContext(io.Discard)
-
+	assert.NotNil(t, got.done)
+	got.done = nil
 	assert.Equal(t, want, got)
 }

@@ -8,9 +8,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"
+	"log/slog"
 	"os/exec"
 	"testing"
 	"time"
@@ -386,4 +388,82 @@ func TestWriteToLogFile(t *testing.T) {
 			tt.wantErr(t, err, fmt.Sprintf("WriteToLogFile(ctx, %v, %v)", tt.args.resultPath, tt.args.data))
 		})
 	}
+}
+
+func TestStart_SuccessFirstTick(t *testing.T) {
+	tickUnit = time.Millisecond
+
+	b := bytes.NewBufferString("")
+	ctx := context.TestContext(b)
+	ctx.LogLevel.Set(slog.LevelDebug)
+	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
+	ctx.Clock = fakeClock
+
+	go func() {
+		err := Start(ctx, 1, "Europe/Paris", true, "")
+		assert.NoError(t, err)
+	}()
+
+	fakeClock.BlockUntil(1)
+	fakeClock.Advance(1 * time.Second)
+	ctx.Cancel()
+	assert.Contains(t, b.String(), "msg=\"first tick\"")
+	assert.NotContains(t, b.String(), "msg=tick")
+}
+
+func TestStart_SuccessFirstTickAndTick(t *testing.T) {
+	tickUnit = time.Millisecond
+
+	b := bytes.NewBufferString("")
+	ctx := context.TestContext(b)
+	ctx.LogLevel.Set(slog.LevelDebug)
+	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
+	ctx.Clock = fakeClock
+
+	go func() {
+		err := Start(ctx, 1, "Europe/Paris", true, "")
+		assert.NoError(t, err)
+	}()
+
+	fakeClock.BlockUntil(1)
+	fakeClock.Advance(1 * time.Second)
+	time.Sleep(50 * time.Millisecond)
+	fakeClock.Advance(1 * time.Second)
+	ctx.Cancel()
+	assert.Contains(t, b.String(), "msg=\"first tick\"")
+	assert.Contains(t, b.String(), "msg=tick")
+}
+
+func TestStart_ErrorWhenNextTickAfterFailed(t *testing.T) {
+	tickUnit = time.Millisecond
+
+	b := bytes.NewBufferString("")
+	ctx := context.TestContext(b)
+	ctx.LogLevel.Set(slog.LevelDebug)
+	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
+	ctx.Clock = fakeClock
+
+	err := Start(ctx, 0, "Europe/Paris", true, "")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "could not calculate next tick of expr */0 * * * *: tried so hard")
+}
+
+func TestStart_ErrorWhenGetCurrentTimeFailed(t *testing.T) {
+	tickUnit = time.Millisecond
+
+	b := bytes.NewBufferString("")
+	ctx := context.TestContext(b)
+	ctx.LogLevel.Set(slog.LevelDebug)
+	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
+	ctx.Clock = fakeClock
+
+	go func() {
+		err := Start(ctx, 1, "Europe/Wrong", true, "")
+		assert.Error(t, err)
+		assert.Equal(t, err.Error(), "unknown time zone Europe/Wrong")
+	}()
+
+	fakeClock.BlockUntil(1)
+	fakeClock.Advance(1 * time.Second)
+	time.Sleep(50 * time.Millisecond)
 }

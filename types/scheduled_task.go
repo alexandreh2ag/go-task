@@ -34,7 +34,7 @@ func (s *ScheduledTask) Execute() *TaskResult {
 	result := &TaskResult{Status: Pending, Task: s}
 	s.TaskResult = result
 
-	args := strings.Fields(s.Command)
+	args := splitCommand(s.Command)
 	if len(args) > 1 {
 		cmd = exec.Command(args[0], args[1:]...)
 	} else {
@@ -91,4 +91,32 @@ func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, user, work
 			task.Directory = workingDir
 		}
 	}
+}
+
+func splitCommand(command string) []string {
+	split := strings.Split(command, " ")
+
+	var result []string
+	var inquote string
+	var block string
+	for _, i := range split {
+		if inquote == "" {
+			if (strings.HasPrefix(i, "'") || strings.HasPrefix(i, "\"")) && !(len(i) > 2 && (strings.HasSuffix(i, "'") || strings.HasSuffix(i, "\""))) {
+				inquote = string(i[0])
+				block = strings.TrimPrefix(i, inquote) + " "
+			} else {
+				result = append(result, i)
+			}
+		} else {
+			if !strings.HasSuffix(i, inquote) {
+				block += i + " "
+			} else {
+				block += strings.TrimSuffix(i, inquote)
+				inquote = ""
+				result = append(result, block)
+				block = ""
+			}
+		}
+	}
+	return result
 }
