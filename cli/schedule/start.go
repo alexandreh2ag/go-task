@@ -5,6 +5,7 @@ import (
 	"alexandreh2ag/go-task/context"
 	"alexandreh2ag/go-task/schedule"
 	"alexandreh2ag/go-task/types"
+	"errors"
 	"github.com/spf13/cobra"
 	"time"
 )
@@ -44,7 +45,13 @@ func GetScheduleStartRunFn(ctx *context.Context) func(*cobra.Command, []string) 
 		resultPath, _ := cmd.Flags().GetString(flags.ResultPath)
 		tick, _ := cmd.Flags().GetDuration(Tick)
 
-		//TODO check tick is in minutes, higher than 0 and it's int
+		if tick.Minutes() == 0 {
+			return errors.New("tick duration must be higher than 0")
+		}
+
+		if tick%time.Minute != 0 {
+			return errors.New("tick duration must be only in minutes")
+		}
 
 		types.PrepareScheduledTasks(ctx.Config.Scheduled, ctx.Logger, user, workingDir)
 
