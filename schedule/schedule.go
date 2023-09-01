@@ -7,13 +7,20 @@ import (
 	"github.com/adhocore/gronx"
 	"github.com/spf13/afero"
 	"os"
+	"os/signal"
 	"path"
 	"sync"
+	"syscall"
 	"time"
 )
 
 const (
 	BlocSeparator = "===================="
+)
+
+var (
+	cronExprNextTick = "*/%d * * * *"
+	tickUnit         = time.Minute
 )
 
 func GetCurrentTime(now time.Time, timezone string) (time.Time, error) {
@@ -26,6 +33,53 @@ func GetCurrentTime(now time.Time, timezone string) (time.Time, error) {
 		now = now.In(tz)
 	}
 	return time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()), nil
+}
+
+func Start(ctx *context.Context, tick int, timezone string, noResultPrint bool, resultPath string) error {
+	var refTime time.Time
+	firstRun := true
+
+	now := ctx.Clock.Now()
+	nextTick, err := gronx.NextTickAfter(fmt.Sprintf(cronExprNextTick, tick), now, false)
+	if err != nil {
+		return fmt.Errorf("could not calculate next tick of expr %s: %v", fmt.Sprintf(cronExprNextTick, tick), err)
+	}
+	ctx.Logger.Info(fmt.Sprintf("next tick: %v", nextTick.Format("2006-01-02T15:04:05")))
+	ctx.Clock.Sleep(nextTick.Sub(now))
+
+	refTime, err = GetCurrentTime(ctx.Clock.Now(), timezone)
+	if err != nil {
+		return err
+	}
+
+	ticker := ctx.Clock.NewTicker(time.Duration(tick) * tickUnit)
+	defer ticker.Stop()
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	for {
+		if firstRun {
+			firstRun = false
+			ctx.Logger.Debug("first tick")
+			Run(ctx, refTime, noResultPrint, resultPath)
+		}
+		select {
+		case <-ticker.Chan():
+			ctx.Logger.Debug("tick")
+			// can ignore error because schedule.GetCurrentTime used at top
+			refTime, _ = GetCurrentTime(ctx.Clock.Now(), timezone)
+
+			Run(ctx, refTime, noResultPrint, resultPath)
+
+		case sig := <-sigs:
+			ctx.Logger.Info(fmt.Sprintf("%s signal received, exiting...", sig.String()))
+			return nil
+
+		case <-ctx.Done():
+			ctx.Logger.Info(fmt.Sprintf("stop asked by app, exiting..."))
+			return nil
+		}
+	}
 }
 
 func Run(ctx *context.Context, ref time.Time, noResultPrint bool, resultPath string) []*types.TaskResult {

@@ -34,7 +34,7 @@ func TestGetScheduleRunCmd_SuccessWithTimezoneOpt(t *testing.T) {
 	}
 	cmd := GetScheduleRunCmd(ctx)
 
-	cmd.SetArgs([]string{"--" + TimeZone, "Europe/Paris"})
+	cmd.SetArgs([]string{"--" + flags.TimeZone, "Europe/Paris"})
 	err := cmd.Execute()
 	assert.NoError(t, err)
 }
@@ -75,7 +75,7 @@ func TestGetScheduleRunCmd_FailedWithTimezoneOpt(t *testing.T) {
 	cmd := GetScheduleRunCmd(ctx)
 	cmd.SetOut(io.Discard)
 	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{"--" + TimeZone, "Europe/Wrong"})
+	cmd.SetArgs([]string{"--" + flags.TimeZone, "Europe/Wrong"})
 	err := cmd.Execute()
 	assert.Error(t, err)
 }

@@ -14,6 +14,7 @@ func GetScheduleCmd(ctx *context.Context) *cobra.Command {
 
 	cmd.AddCommand(
 		schedule.GetScheduleRunCmd(ctx),
+		schedule.GetScheduleStartCmd(ctx),
 	)
 
 	return cmd

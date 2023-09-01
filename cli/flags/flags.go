@@ -7,9 +7,12 @@ import (
 )
 
 const (
-	WorkingDir = "working-dir"
-	User       = "user"
-	GroupName  = "group-name"
+	WorkingDir    = "working-dir"
+	User          = "user"
+	GroupName     = "group-name"
+	TimeZone      = "timezone"
+	ResultPath    = "result-path"
+	NoResultPrint = "no-result-print"
 )
 
 func AddFlagWorkingDir(cmd *cobra.Command) {
@@ -44,5 +47,30 @@ func AddFlagGroupName(cmd *cobra.Command) {
 		"g",
 		"",
 		"Define group name",
+	)
+}
+
+func AddFlagTimezone(cmd *cobra.Command) {
+	cmd.Flags().StringP(
+		TimeZone,
+		"t",
+		"",
+		"Define timezone for used to calcul cron expression",
+	)
+}
+
+func AddFlagNoResultPrint(cmd *cobra.Command) {
+	cmd.Flags().Bool(
+		NoResultPrint,
+		false,
+		"Flag to not print tasks results",
+	)
+}
+
+func AddFlagResultPath(cmd *cobra.Command) {
+	cmd.Flags().String(
+		ResultPath,
+		"",
+		"Define path to save tasks results (default: no logs file)",
 	)
 }

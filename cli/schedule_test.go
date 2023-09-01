@@ -10,5 +10,5 @@ func TestGetScheduleCmd(t *testing.T) {
 	ctx := context.TestContext(nil)
 	cmd := GetScheduleCmd(ctx)
 
-	assert.Equal(t, 1, len(cmd.Commands()))
+	assert.Equal(t, 2, len(cmd.Commands()))
 }
