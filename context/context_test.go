@@ -84,3 +84,31 @@ func TestTestContext_WithLogBuffer(t *testing.T) {
 	got.done = nil
 	assert.Equal(t, want, got)
 }
+
+func TestContext_Cancel(t *testing.T) {
+	ctx := &Context{}
+	ctx.done = make(chan bool)
+	running := true
+	go func() {
+		select {
+		case <-ctx.done:
+			running = false
+		}
+	}()
+	ctx.Cancel()
+	assert.Equal(t, false, running)
+}
+
+func TestContext_Done(t *testing.T) {
+	ctx := &Context{}
+	ctx.done = make(chan bool)
+	running := true
+	go func() {
+		select {
+		case <-ctx.Done():
+			running = false
+		}
+	}()
+	ctx.done <- true
+	assert.Equal(t, false, running)
+}
