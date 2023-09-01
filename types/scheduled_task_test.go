@@ -222,3 +222,63 @@ func TestScheduledTask_Execute(t *testing.T) {
 		})
 	}
 }
+
+func Test_splitCommand(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		command string
+		want    []string
+	}{
+		{
+			name:    "SuccessSimpleCommand",
+			command: "echo",
+			want:    []string{"echo"},
+		},
+		{
+			name:    "SuccessComplexCommand",
+			command: "echo test",
+			want:    []string{"echo", "test"},
+		},
+		{
+			name:    "SuccessComplexCommandWithDoubleQuote",
+			command: "echo \"test\"",
+			want:    []string{"echo", "\"test\""},
+		},
+		{
+			name:    "SuccessComplexCommandWithQuote",
+			command: "echo 'test'",
+			want:    []string{"echo", "'test'"},
+		},
+		{
+			name:    "SuccessComplexCommandWithQuoteAndDoubleQuote",
+			command: "echo '\"test\"'",
+			want:    []string{"echo", "'\"test\"'"},
+		},
+		{
+			name:    "SuccessComplexCommandWithDoubleQuoteAndSpace",
+			command: "echo ' test '",
+			want:    []string{"echo", " test "},
+		},
+		{
+			name:    "SuccessComplexCommandWithQuoteAndSpace",
+			command: "echo ' test '",
+			want:    []string{"echo", " test "},
+		},
+		{
+			name:    "SuccessBashWrappedCommand",
+			command: "bash -c 'echo test'",
+			want:    []string{"bash", "-c", "echo test"},
+		},
+		{
+			name:    "SuccessBashWrappedCommandAndSpace",
+			command: "bash -c ' echo test '",
+			want:    []string{"bash", "-c", " echo test "},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, splitCommand(tt.command), "splitCommand(%v)", tt.command)
+		})
+	}
+}
