@@ -3,14 +3,11 @@ package worker
 import (
 	"alexandreh2ag/go-task/cli/flags"
 	"alexandreh2ag/go-task/context"
+	"alexandreh2ag/go-task/generate"
 	"alexandreh2ag/go-task/types"
 	"fmt"
 	"github.com/spf13/cobra"
-)
-
-const (
-	Format           = "format"
-	FormatSupervisor = "supervisor"
+	"os"
 )
 
 func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
@@ -20,14 +17,25 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 		RunE:  GetWorkerGenerateRunFn(ctx),
 	}
 
+	outputPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
 	flags.AddFlagGroupName(cmd)
 	flags.AddFlagUser(cmd)
 	flags.AddFlagWorkingDir(cmd)
 	cmd.Flags().StringP(
-		Format,
+		flags.Format,
 		"f",
-		FormatSupervisor,
+		flags.FormatSupervisor,
 		"Choose format",
+	)
+	cmd.Flags().StringP(
+		flags.OutputPath,
+		"o",
+		fmt.Sprintf("%s/workers.conf", outputPath),
+		"Choose output path",
 	)
 
 	return cmd
@@ -35,16 +43,15 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 
 func GetWorkerGenerateRunFn(ctx *context.Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		format, _ := cmd.Flags().GetString(Format)
+		format, _ := cmd.Flags().GetString(flags.Format)
 		user, _ := cmd.Flags().GetString(flags.User)
 		workingDir, _ := cmd.Flags().GetString(flags.WorkingDir)
+		outputPath, _ := cmd.Flags().GetString(flags.OutputPath)
+		groupName, _ := cmd.Flags().GetString(flags.GroupName)
 
 		types.PrepareWorkerTasks(ctx.Config.Workers, user, workingDir)
-		switch format {
-		case FormatSupervisor:
-			ctx.Logger.Info(fmt.Sprintf("Generate format type %s", FormatSupervisor))
-		}
+		ctx.Logger.Info(fmt.Sprintf("Generate format type %s", flags.FormatSupervisor))
 
-		return nil
+		return generate.Generate(ctx, outputPath, format, groupName)
 	}
 }
