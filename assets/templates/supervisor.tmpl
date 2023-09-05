@@ -1,0 +1,11 @@
+[group:{{ groupName }}]
+programs={{ programs . }}
+
+{{ range . }}
+[program:{{ .Id }}]
+directory = {{ .Directory }}
+autorestart = true
+autostart = true
+user = {{ .User }}
+command = {{ .Command }}
+{{ end }}
