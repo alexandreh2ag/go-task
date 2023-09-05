@@ -1,9 +1,9 @@
 package types
 
 import (
-	"alexandreh2ag/go-task/log"
 	"bytes"
 	"errors"
+	"github.com/alexandreh2ag/go-task/log"
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"io"

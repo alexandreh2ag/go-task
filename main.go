@@ -1,8 +1,8 @@
 package main
 
 import (
-	"alexandreh2ag/go-task/cli"
-	"alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/cli"
+	"github.com/alexandreh2ag/go-task/context"
 )
 
 func main() {

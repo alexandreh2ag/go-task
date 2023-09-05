@@ -1,10 +1,10 @@
 package schedule
 
 import (
-	"alexandreh2ag/go-task/context"
-	"alexandreh2ag/go-task/types"
 	"fmt"
 	"github.com/adhocore/gronx"
+	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/spf13/afero"
 	"os"
 	"os/signal"

@@ -1,6 +1,6 @@
 package config
 
-import "alexandreh2ag/go-task/types"
+import "github.com/alexandreh2ag/go-task/types"
 
 type Config struct {
 	//LogLevel string `mapstructure:"log_level"`

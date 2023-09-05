@@ -1,12 +1,12 @@
 package generate
 
 import (
-	"alexandreh2ag/go-task/context"
-	mockOs "alexandreh2ag/go-task/mocks/os"
-	mockAfero "alexandreh2ag/go-task/mocks/spf13"
-	"alexandreh2ag/go-task/types"
 	"bytes"
 	"errors"
+	"github.com/alexandreh2ag/go-task/context"
+	mockOs "github.com/alexandreh2ag/go-task/mocks/os"
+	mockAfero "github.com/alexandreh2ag/go-task/mocks/spf13"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"

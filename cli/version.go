@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/version"
+	"github.com/alexandreh2ag/go-task/version"
 	"github.com/spf13/cobra"
 )
 

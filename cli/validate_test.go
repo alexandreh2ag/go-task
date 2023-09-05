@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/context"
 	"bytes"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/context"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

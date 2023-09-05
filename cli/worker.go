@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/cli/worker"
-	"alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/cli/worker"
+	"github.com/alexandreh2ag/go-task/context"
 	"github.com/spf13/cobra"
 )
 

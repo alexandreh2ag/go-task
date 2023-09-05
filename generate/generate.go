@@ -1,12 +1,12 @@
 package generate
 
 import (
-	"alexandreh2ag/go-task/assets"
-	"alexandreh2ag/go-task/context"
-	"alexandreh2ag/go-task/types"
-	"alexandreh2ag/go-task/version"
 	"errors"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/assets"
+	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/types"
+	"github.com/alexandreh2ag/go-task/version"
 	"html/template"
 	"io"
 	"io/fs"

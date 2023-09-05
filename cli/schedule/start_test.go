@@ -1,7 +1,7 @@
 package schedule
 
 import (
-	"alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/context"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/assert"
 	"io"

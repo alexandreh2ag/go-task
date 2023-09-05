@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/config"
-	"alexandreh2ag/go-task/context"
-	"alexandreh2ag/go-task/types"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/config"
+	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"

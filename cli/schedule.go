@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/cli/schedule"
-	"alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/cli/schedule"
+	"github.com/alexandreh2ag/go-task/context"
 	"github.com/spf13/cobra"
 )
 

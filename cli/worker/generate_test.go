@@ -1,10 +1,10 @@
 package worker
 
 import (
-	"alexandreh2ag/go-task/cli/flags"
-	"alexandreh2ag/go-task/context"
-	mockOs "alexandreh2ag/go-task/mocks/os"
-	mockAfero "alexandreh2ag/go-task/mocks/spf13"
+	"github.com/alexandreh2ag/go-task/cli/flags"
+	"github.com/alexandreh2ag/go-task/context"
+	mockOs "github.com/alexandreh2ag/go-task/mocks/os"
+	mockAfero "github.com/alexandreh2ag/go-task/mocks/spf13"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"

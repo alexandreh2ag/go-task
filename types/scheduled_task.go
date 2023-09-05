@@ -1,9 +1,9 @@
 package types
 
 import (
-	"alexandreh2ag/go-task/log"
 	"bytes"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/log"
 	"log/slog"
 	"os/exec"
 	"strings"

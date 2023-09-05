@@ -1,7 +1,7 @@
 WHAT := gtask
 
 PROJECT     ?= gtask
-REPO        ?= github.com/alexandreh2ag/gtask
+REPO        ?= github.com/alexandreh2ag/go-task
 PWD         ?= $(shell pwd)
 VERSION     ?= $(shell git describe --tags)
 REVISION    ?= $(shell git rev-parse HEAD)
@@ -10,43 +10,43 @@ REVISION    ?= $(shell git rev-parse HEAD)
 
 build:
 	for target in $(WHAT); do \
-		go build -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
+		go build -ldflags "-X ${REPO}/version.Version=${VERSION} \
+			-X ${REPO}/version.Commit=${REVISION}" \
 			-o ./bin/$$target ./main.go; \
 	done
 
 build-darwin-amd64:
 	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
+		CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -a -installsuffix cgo -ldflags "-X ${REPO}/version.Version=${VERSION} \
+			-X ${REPO}/version.Commit=${REVISION}" \
 			-o ./bin/$$target-darwin-amd64 ./main.go; \
 	done
 
 build-darwin-arm64:
 	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
+		CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin go build -a -installsuffix cgo -ldflags "-X ${REPO}/version.Version=${VERSION} \
+			-X ${REPO}/version.Commit=${REVISION}" \
 			-o ./bin/$$target-darwin-arm64 ./main.go; \
 	done
 
 build-linux-amd64:
 	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
+		CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version.Version=${VERSION} \
+			-X ${REPO}/version.Commit=${REVISION}" \
 			-o ./bin/$$target-linux-amd64 ./main.go; \
 	done
 
 build-linux-armv7:
 	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=arm GOARM=7 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-			-X ${REPO}/version/version.Commit=${REVISION}" \
+		CGO_ENABLED=0 GOARCH=arm GOARM=7 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version.Version=${VERSION} \
+			-X ${REPO}/version.Commit=${REVISION}" \
 			-o ./bin/$$target-linux-armv7 ./main.go; \
 	done
 
 build-linux-arm64:
 	for target in $(WHAT); do \
-		CGO_ENABLED=0 GOARCH=arm64 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version/version.Version=${VERSION} \
-		-X ${REPO}/version/version.Commit=${REVISION}" \
+		CGO_ENABLED=0 GOARCH=arm64 GOOS=linux go build -a -installsuffix cgo -ldflags "-X ${REPO}/version.Version=${VERSION} \
+		-X ${REPO}/version.Commit=${REVISION}" \
 		-o ./bin/$$target-linux-arm64 ./main.go; \
 		done
 

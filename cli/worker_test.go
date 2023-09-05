@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/context"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

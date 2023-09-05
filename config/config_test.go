@@ -1,7 +1,7 @@
 package config
 
 import (
-	"alexandreh2ag/go-task/types"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"testing"

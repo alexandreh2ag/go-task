@@ -1,8 +1,8 @@
 package context
 
 import (
-	"alexandreh2ag/go-task/config"
-	"alexandreh2ag/go-task/types"
+	"github.com/alexandreh2ag/go-task/config"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/jonboulle/clockwork"
 	"github.com/spf13/afero"
 	"io"

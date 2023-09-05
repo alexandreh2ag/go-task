@@ -1,11 +1,11 @@
 package worker
 
 import (
-	"alexandreh2ag/go-task/cli/flags"
-	"alexandreh2ag/go-task/context"
-	"alexandreh2ag/go-task/generate"
-	"alexandreh2ag/go-task/types"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/cli/flags"
+	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/generate"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/spf13/cobra"
 	"os"
 )

@@ -1,9 +1,9 @@
 package schedule
 
 import (
-	"alexandreh2ag/go-task/cli/flags"
-	"alexandreh2ag/go-task/context"
-	"alexandreh2ag/go-task/types"
+	"github.com/alexandreh2ag/go-task/cli/flags"
+	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"

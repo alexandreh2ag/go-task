@@ -1,4 +1,4 @@
-module alexandreh2ag/go-task
+module github.com/alexandreh2ag/go-task
 
 go 1.21.0
 
