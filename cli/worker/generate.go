@@ -10,6 +10,11 @@ import (
 	"os"
 )
 
+const (
+	Format     = "format"
+	OutputPath = "output"
+)
+
 func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate",
@@ -26,13 +31,13 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 	flags.AddFlagUser(cmd)
 	flags.AddFlagWorkingDir(cmd)
 	cmd.Flags().StringP(
-		flags.Format,
+		Format,
 		"f",
-		flags.FormatSupervisor,
+		generate.FormatSupervisor,
 		"Choose format",
 	)
 	cmd.Flags().StringP(
-		flags.OutputPath,
+		OutputPath,
 		"o",
 		fmt.Sprintf("%s/workers.conf", outputPath),
 		"Choose output path",
@@ -43,14 +48,18 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 
 func GetWorkerGenerateRunFn(ctx *context.Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		format, _ := cmd.Flags().GetString(flags.Format)
+		format, _ := cmd.Flags().GetString(Format)
 		user, _ := cmd.Flags().GetString(flags.User)
 		workingDir, _ := cmd.Flags().GetString(flags.WorkingDir)
-		outputPath, _ := cmd.Flags().GetString(flags.OutputPath)
+		outputPath, _ := cmd.Flags().GetString(OutputPath)
 		groupName, _ := cmd.Flags().GetString(flags.GroupName)
 
+		if groupName == "" || outputPath == "" {
+			return fmt.Errorf("missing mandatory arguments (--%s, --%s)", OutputPath, flags.GroupName)
+		}
+
 		types.PrepareWorkerTasks(ctx.Config.Workers, user, workingDir)
-		ctx.Logger.Info(fmt.Sprintf("Generate format type %s", flags.FormatSupervisor))
+		ctx.Logger.Info(fmt.Sprintf("Generate format type %s", generate.FormatSupervisor))
 
 		return generate.Generate(ctx, outputPath, format, groupName)
 	}

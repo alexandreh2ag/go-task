@@ -2,7 +2,6 @@ package generate
 
 import (
 	"alexandreh2ag/go-task/assets"
-	"alexandreh2ag/go-task/cli/flags"
 	"alexandreh2ag/go-task/context"
 	"alexandreh2ag/go-task/version"
 	"errors"
@@ -15,19 +14,23 @@ import (
 	"time"
 )
 
+const (
+	FormatSupervisor = "supervisor"
+)
+
 func Generate(ctx *context.Context, outputPath string, format string, groupName string) error {
 	err := checkDir(ctx, outputPath)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error with outputh path: %s", err.Error()))
+		return errors.New(fmt.Sprintf("Error with outputh dir: %s", err.Error()))
 	}
 
 	outputFile, err := ctx.Fs.Create(outputPath)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error with outfile: %s", err.Error()))
+		return errors.New(fmt.Sprintf("Error with output file: %s", err.Error()))
 	}
 
 	switch format {
-	case flags.FormatSupervisor:
+	case FormatSupervisor:
 		return templateSupervisorFile(ctx, outputFile, groupName)
 	default:
 		return errors.New(fmt.Sprintf("Error with unsupported format %s", format))
@@ -46,10 +49,10 @@ func checkDir(ctx *context.Context, path string) error {
 
 func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName string) error {
 	supervisorTemplateContent, err := fs.ReadFile(assets.TemplateFiles, "templates/supervisor.tmpl")
-
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error with template file: %s", err.Error()))
 	}
+
 	extraVars := template.FuncMap{
 		"now":       time.Now,
 		"version":   version.GetFormattedVersion,
@@ -69,5 +72,4 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	}
 
 	return tmpl.Execute(writer, ctx.Config.Workers)
-	//return tmpl.Execute(os.Stdout, ctx.Config.Workers)
 }

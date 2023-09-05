@@ -7,15 +7,12 @@ import (
 )
 
 const (
-	WorkingDir       = "working-dir"
-	User             = "user"
-	GroupName        = "group-name"
-	TimeZone         = "timezone"
-	ResultPath       = "result-path"
-	NoResultPrint    = "no-result-print"
-	Format           = "format"
-	FormatSupervisor = "supervisor"
-	OutputPath       = "output"
+	WorkingDir    = "working-dir"
+	User          = "user"
+	GroupName     = "group-name"
+	TimeZone      = "timezone"
+	ResultPath    = "result-path"
+	NoResultPrint = "no-result-print"
 )
 
 func AddFlagWorkingDir(cmd *cobra.Command) {
