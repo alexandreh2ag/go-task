@@ -25,6 +25,9 @@ jobs:
       - name: Get dependencies
         run: go mod download
 
+      - name: Generate mock
+        run: ./bin/mock.sh
+
       - name: Test
         run: go test ./...
 
