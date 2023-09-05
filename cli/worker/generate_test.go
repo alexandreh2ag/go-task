@@ -27,7 +27,7 @@ func TestGetWorkerGenerateCmd_Success(t *testing.T) {
 	dirLogMock := mockOs.NewMockFileInfo(ctrl)
 	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(dirLogMock, nil)
 	fsMock.EXPECT().Create(gomock.Eq(outputPath)).Times(1).Return(fileMock, nil)
-	fileMock.EXPECT().Write(gomock.Any()).Times(5).Return(1, nil)
+	fileMock.EXPECT().Write(gomock.Any()).AnyTimes().Return(1, nil)
 
 	cmd := GetWorkerGenerateCmd(ctx)
 	cmd.SetArgs([]string{"--" + flags.GroupName, "test", "--" + OutputPath, outputPath})

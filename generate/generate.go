@@ -3,6 +3,7 @@ package generate
 import (
 	"alexandreh2ag/go-task/assets"
 	"alexandreh2ag/go-task/context"
+	"alexandreh2ag/go-task/types"
 	"alexandreh2ag/go-task/version"
 	"errors"
 	"fmt"
@@ -57,13 +58,7 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 		"now":       time.Now,
 		"version":   version.GetFormattedVersion,
 		"groupName": func() string { return groupName },
-		"programs": func() string {
-			programs := []string{}
-			for _, task := range ctx.Config.Workers {
-				programs = append(programs, task.Id)
-			}
-			return strings.Join(programs, ",")
-		},
+		"programs":  generateProgramList,
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
@@ -72,4 +67,12 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	}
 
 	return tmpl.Execute(writer, ctx.Config.Workers)
+}
+
+func generateProgramList(workers types.WorkerTasks) string {
+	programs := []string{}
+	for _, task := range workers {
+		programs = append(programs, task.Id)
+	}
+	return strings.Join(programs, ",")
 }

@@ -1,5 +1,5 @@
 [group:{{ groupName }}]
-programs={{ programs }}
+programs={{ programs . }}
 
 {{ range . }}
 [program:{{ .Id }}]

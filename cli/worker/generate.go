@@ -22,10 +22,7 @@ func GetWorkerGenerateCmd(ctx *context.Context) *cobra.Command {
 		RunE:  GetWorkerGenerateRunFn(ctx),
 	}
 
-	outputPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	outputPath, _ := os.Getwd()
 
 	flags.AddFlagGroupName(cmd)
 	flags.AddFlagUser(cmd)
