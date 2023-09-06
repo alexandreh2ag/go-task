@@ -177,7 +177,7 @@ func TestDeleteFile_FileDoesNotExist(t *testing.T) {
 	assert.Equal(t, false, fileExist)
 }
 
-func TestDeleteFile_Error(t *testing.T) {
+func TestGenerate_ErrorDeleteFile(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	outputDir := "/tmp/subdir"
 	outputPath := outputDir + "/output.txt"
@@ -194,4 +194,18 @@ func TestDeleteFile_Error(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 	assert.Contains(t, err.Error(), "Error when deleting output file")
+}
+
+func TestGenerate_NoErrorDeleteFile(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	outputDir := "/tmp/subdir"
+	outputPath := outputDir + "/output.txt"
+
+	_ = afero.WriteFile(ctx.Fs, outputPath, []byte{}, 0644)
+
+	err := Generate(ctx, outputPath, FormatSupervisor, "myname")
+
+	fileExist, _ := afero.Exists(ctx.Fs, outputPath)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, false, fileExist)
 }
