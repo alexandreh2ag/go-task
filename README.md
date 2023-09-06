@@ -40,6 +40,13 @@ Available Commands:
 
 #### Generate Supervisord config
 
+CLI options:
+* user: Define user who run command
+* working-dir: Define working dir
+* group-name: Define group name (like prefix)
+* output: Define path to save config file
+* format: Choose format of output file
+
 ```shell
 # this command will read gtask.yml and generate supervisord config with workers list.
 gtask worker generate --config gtask.yml --group-name my-group --format supervisor --output dest/path.conf
@@ -50,7 +57,6 @@ gtask worker generate --config gtask.yml --group-name my-group --format supervis
 #### Run
 
 CLI options:
-* user: Define user who run command
 * working-dir: Define working dir
 * timezone: Choose a specific timezone
 * no-result-print: Hide output of command
@@ -66,7 +72,6 @@ gtask schedule run --config gtask.yml --timezone 'Europe/Paris'
 #### Start
 
 CLI options:
-* user: Define user who run command
 * working-dir: Define working dir
 * timezone: Choose a specific timezone
 * no-result-print: Hide output of command
