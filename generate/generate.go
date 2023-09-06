@@ -7,11 +7,11 @@ import (
 	"github.com/alexandreh2ag/go-task/context"
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
-	"html/template"
 	"io"
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -67,13 +67,13 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 		"version":   version.GetFormattedVersion,
 		"groupName": func() string { return groupName },
 		"programs":  generateProgramList,
+		"envs":      generateEnvVars,
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
 	if err != nil {
 		return err
 	}
-
 	return tmpl.Execute(writer, ctx.Config.Workers)
 }
 
@@ -83,6 +83,16 @@ func generateProgramList(workers types.WorkerTasks) string {
 		programs = append(programs, task.Id)
 	}
 	return strings.Join(programs, ",")
+}
+
+func generateEnvVars(worker types.WorkerTask, groupName string) string {
+	envVars := []string{}
+	envVars = append(envVars, fmt.Sprintf(`GTASK_GROUPNAME="%s"`, groupName))
+	envVars = append(envVars, fmt.Sprintf(`GTASK_DIR="%s"`, worker.Directory))
+	envVars = append(envVars, fmt.Sprintf(`GTASK_USER="%s"`, worker.User))
+	envVars = append(envVars, fmt.Sprintf(`GTASK_ID="%s"`, worker.Id))
+
+	return strings.Join(envVars, ",")
 }
 
 func deleteFile(ctx *context.Context, path string) error {

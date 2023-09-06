@@ -8,4 +8,5 @@ autorestart = true
 autostart = true
 user = {{ .User }}
 command = {{ .Command }}
+environment = {{ envs . groupName }}
 {{ end }}
