@@ -30,6 +30,19 @@ func Test_WorkerTask_SuccessValidateWithOptionalData(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func Test_WorkerTask_SuccessValidateIDWithUnderscore(t *testing.T) {
+	validate := validator.New()
+	worker := WorkerTask{
+		Id:        "test_foo",
+		Command:   "fake",
+		User:      "test",
+		Directory: "/tmp/test/",
+	}
+	err := validate.Struct(worker)
+
+	assert.NoError(t, err)
+}
+
 func Test_WorkerTask_ErrorValidate(t *testing.T) {
 	validate := validator.New()
 	worker := WorkerTask{
@@ -54,6 +67,20 @@ func Test_WorkerTask_ErrorValidateComplex(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Field validation for 'User' failed on the 'alphanum' tag")
 	assert.Contains(t, err.Error(), "Field validation for 'Directory' failed on the 'dirpath' tag")
+}
+
+func Test_WorkerTask_ErrorValidateID(t *testing.T) {
+	validate := validator.New()
+	worker := WorkerTask{
+		Id:        "test foo",
+		Command:   "fake",
+		User:      "user",
+		Directory: "/tmp",
+	}
+	err := validate.Struct(worker)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Field validation for 'Id' failed on the 'excludesall' tag")
 }
 
 func TestPrepareWorkerTasks(t *testing.T) {

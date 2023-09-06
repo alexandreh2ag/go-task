@@ -19,7 +19,7 @@ const (
 type ScheduledTasks = []*ScheduledTask
 
 type ScheduledTask struct {
-	Id         string `mapstructure:"id" validate:"required,alphanumunicode"`
+	Id         string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
 	CronExpr   string `mapstructure:"expr" validate:"required,cron"`
 	Command    string `mapstructure:"command" validate:"required"`
 	Directory  string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
