@@ -22,7 +22,6 @@ type ScheduledTask struct {
 	Id         string `mapstructure:"id" validate:"required,alphanumunicode"`
 	CronExpr   string `mapstructure:"expr" validate:"required,cron"`
 	Command    string `mapstructure:"command" validate:"required"`
-	User       string `mapstructure:"user" validate:"omitempty,required,alphanum"`
 	Directory  string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
 	TaskResult *TaskResult
 
@@ -44,7 +43,7 @@ func (s *ScheduledTask) Execute() *TaskResult {
 	cmd.Stdout = &result.Output
 	cmd.Stderr = &result.Output
 
-	s.Logger.Debug(fmt.Sprintf("Command (id: %s) run `%s` in %s by user %s", s.Id, s.Command, s.Directory, s.User))
+	s.Logger.Debug(fmt.Sprintf("Command (id: %s) run `%s` in %s", s.Id, s.Command, s.Directory))
 	result.StartAt = time.Now()
 	result.Error = cmd.Run()
 	result.FinishAt = time.Now()
@@ -80,12 +79,9 @@ func (t *TaskResult) StatusString() string {
 	return "unknown"
 }
 
-func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, user, workingDir string) {
+func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, workingDir string) {
 	for _, task := range tasks {
 		task.Logger = logger.With(log.TaskKey, task.Id)
-		if task.User == "" {
-			task.User = user
-		}
 
 		if task.Directory == "" {
 			task.Directory = workingDir

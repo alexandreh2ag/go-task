@@ -31,7 +31,6 @@ func Test_ScheduledTask_SuccessValidateWithOptionalData(t *testing.T) {
 		Id:        "test",
 		CronExpr:  "* * * * *",
 		Command:   "fake",
-		User:      "test",
 		Directory: "/tmp/test/",
 	}
 	err := validate.Struct(scheduled)
@@ -57,14 +56,12 @@ func Test_ScheduledTask_ErrorValidateComplex(t *testing.T) {
 		Id:        "test",
 		CronExpr:  "wrong",
 		Command:   "fake",
-		User:      "user/test",
 		Directory: "wrong",
 	}
 	err := validate.Struct(scheduled)
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Field validation for 'CronExpr' failed on the 'cron' tag")
-	assert.Contains(t, err.Error(), "Field validation for 'User' failed on the 'alphanum' tag")
 	assert.Contains(t, err.Error(), "Field validation for 'Directory' failed on the 'dirpath' tag")
 }
 
@@ -96,21 +93,21 @@ func TestPrepareScheduledTasks(t *testing.T) {
 			args: args{
 				tasks: ScheduledTasks{
 					&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *"},
-					&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", User: "bar", Directory: "/app/bar/"},
+					&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/"},
 				},
 				logger:     logger,
 				user:       "foo",
 				workingDir: "/app/foo/",
 			},
 			want: ScheduledTasks{
-				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", User: "foo", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test")},
-				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", User: "bar", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2")},
+				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test")},
+				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2")},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PrepareScheduledTasks(tt.args.tasks, tt.args.logger, tt.args.user, tt.args.workingDir)
+			PrepareScheduledTasks(tt.args.tasks, tt.args.logger, tt.args.workingDir)
 			assert.Equal(t, tt.want, tt.args.tasks)
 		})
 	}

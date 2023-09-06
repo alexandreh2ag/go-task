@@ -39,20 +39,6 @@ func TestGetScheduleRunCmd_SuccessWithTimezoneOpt(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestGetScheduleRunCmd_SuccessWithUserOpt(t *testing.T) {
-	ctx := context.TestContext(io.Discard)
-	task := &types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"}
-	ctx.Config.Scheduled = types.ScheduledTasks{
-		task,
-	}
-	cmd := GetScheduleRunCmd(ctx)
-
-	cmd.SetArgs([]string{"--" + flags.User, "foo"})
-	err := cmd.Execute()
-	assert.NoError(t, err)
-	assert.Equal(t, "foo", task.User)
-}
-
 func TestGetScheduleRunCmd_SuccessWithDirectoryOpt(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	task := &types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"}
