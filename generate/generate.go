@@ -25,6 +25,14 @@ func Generate(ctx *context.Context, outputPath string, format string, groupName 
 		return errors.New(fmt.Sprintf("Error with outputh dir: %s", err.Error()))
 	}
 
+	if len(ctx.Config.Workers) == 0 {
+		err = deleteFile(ctx, outputPath)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Error when deleting output file: %s", err.Error()))
+		}
+		return err
+	}
+
 	outputFile, err := ctx.Fs.Create(outputPath)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Error with output file: %s", err.Error()))
@@ -75,4 +83,14 @@ func generateProgramList(workers types.WorkerTasks) string {
 		programs = append(programs, task.Id)
 	}
 	return strings.Join(programs, ",")
+}
+
+func deleteFile(ctx *context.Context, path string) error {
+	err := ctx.Fs.Remove(path)
+	if err != nil {
+		if strings.Contains(err.Error(), "file does not exist") {
+			return nil
+		}
+	}
+	return err
 }

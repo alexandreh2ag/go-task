@@ -5,6 +5,7 @@ import (
 	"github.com/alexandreh2ag/go-task/context"
 	mockOs "github.com/alexandreh2ag/go-task/mocks/os"
 	mockAfero "github.com/alexandreh2ag/go-task/mocks/spf13"
+	"github.com/alexandreh2ag/go-task/types"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"
@@ -23,6 +24,12 @@ func TestGetWorkerGenerateCmd_Success(t *testing.T) {
 
 	outputDir := "/tmp/subdir"
 	outputPath := outputDir + "/output.txt"
+
+	workers := types.WorkerTasks{
+		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
+		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+	}
+	ctx.Config.Workers = workers
 
 	dirLogMock := mockOs.NewMockFileInfo(ctrl)
 	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(dirLogMock, nil)
