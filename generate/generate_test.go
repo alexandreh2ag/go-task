@@ -3,6 +3,7 @@ package generate
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/alexandreh2ag/go-task/context"
 	mockOs "github.com/alexandreh2ag/go-task/mocks/os"
 	mockAfero "github.com/alexandreh2ag/go-task/mocks/spf13"
@@ -32,8 +33,18 @@ func TestCheckDir_dirNotOK(t *testing.T) {
 func TestGenerate_invalidExtension(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
-		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
 	}
 	ctx.Config.Workers = workers
 	outputPath := "/tmp/subdir/output.txt"
@@ -48,8 +59,18 @@ func TestGenerate_invalidExtension(t *testing.T) {
 func TestGenerate_invalidDir(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
-		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
 	}
 	ctx.Config.Workers = workers
 	err := Generate(ctx, "/tmp/anotherdir/output.txt", FormatSupervisor, "myname")
@@ -61,8 +82,18 @@ func TestGenerate_invalidDir(t *testing.T) {
 func TestGenerate_invalidOutputFile(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
-		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
 	}
 	ctx.Config.Workers = workers
 
@@ -87,8 +118,18 @@ func TestGenerate_invalidOutputFile(t *testing.T) {
 func TestGenerate_OK(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
-		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
 	}
 	ctx.Config.Workers = workers
 
@@ -113,26 +154,39 @@ func TestGenerate_OK(t *testing.T) {
 
 func TestTemplateSupervisorFile_OK(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
+
+	workers := types.WorkerTasks{
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+	}
+	groupName := "test-group"
+
 	expectedOutput := "[group:test-group]\n" +
 		"programs=test,test2\n\n\n" +
 		"[program:test]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
-		"user = test\n" +
-		"command = fake\n\n" +
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = GTASK_GROUPNAME=test-group,GTASK_DIR=/tmp/dir,GTASK_USER=toto,GTASK_ID=test\n\n" +
 		"[program:test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
-		"user = test2\n" +
-		"command = ping\n"
-
-	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
-		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
-	}
-	groupName := "test-group"
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = GTASK_GROUPNAME=test-group,GTASK_DIR=/tmp/dir,GTASK_USER=toto,GTASK_ID=test2\n"
 
 	ctx.Config.Workers = workers
 
@@ -145,8 +199,18 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 
 func TestGenerateProgramList(t *testing.T) {
 	workers := types.WorkerTasks{
-		{Id: "test", Command: "fake"},
-		{Id: "test2", Command: "fake"},
+		{
+			Id:        "test",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			User:      "toto",
+			Directory: "/tmp/dir",
+		},
 	}
 	output := generateProgramList(workers)
 	assert.Equal(t, output, "test,test2")
@@ -208,4 +272,19 @@ func TestGenerate_NoErrorDeleteFile(t *testing.T) {
 	fileExist, _ := afero.Exists(ctx.Fs, outputPath)
 	assert.Equal(t, err, nil)
 	assert.Equal(t, false, fileExist)
+}
+
+func TestGenerateEnvVars(t *testing.T) {
+	worker := types.WorkerTask{
+		Id:        "test2",
+		Command:   "fake",
+		User:      "toto",
+		Directory: "/tmp/dir",
+	}
+	groupName := "group"
+	output := generateEnvVars(worker, groupName)
+
+	assert.Equal(t,
+		fmt.Sprintf("GTASK_GROUPNAME=%s,GTASK_DIR=%s,GTASK_USER=%s,GTASK_ID=%s", groupName, worker.Directory, worker.User, worker.Id),
+		output)
 }
