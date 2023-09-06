@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"
-	"strings"
 	"testing"
 )
 
@@ -32,24 +31,41 @@ func TestCheckDir_dirNotOK(t *testing.T) {
 
 func TestGenerate_invalidExtension(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
+	workers := types.WorkerTasks{
+		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
+		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+	}
+	ctx.Config.Workers = workers
 	outputPath := "/tmp/subdir/output.txt"
 	_ = afero.WriteFile(ctx.Fs, outputPath, []byte{}, 0644)
+
 	err := Generate(ctx, outputPath, "abcd", "myname")
 
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, true, strings.Contains(err.Error(), "Error with unsupported format"))
+	assert.Contains(t, err.Error(), "Error with unsupported format")
 }
 
 func TestGenerate_invalidDir(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
+	workers := types.WorkerTasks{
+		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
+		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+	}
+	ctx.Config.Workers = workers
 	err := Generate(ctx, "/tmp/anotherdir/output.txt", FormatSupervisor, "myname")
 
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, true, strings.Contains(err.Error(), "Error with outputh dir"))
+	assert.Contains(t, err.Error(), "Error with outputh dir")
 }
 
 func TestGenerate_invalidOutputFile(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
+	workers := types.WorkerTasks{
+		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
+		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+	}
+	ctx.Config.Workers = workers
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	fsMock := mockAfero.NewMockFs(ctrl)
@@ -65,11 +81,17 @@ func TestGenerate_invalidOutputFile(t *testing.T) {
 	err := Generate(ctx, outputPath, FormatSupervisor, "myname")
 
 	assert.NotEqual(t, err, nil)
-	assert.Equal(t, true, strings.Contains(err.Error(), "Error with output file"))
+	assert.Contains(t, err.Error(), "Error with output file")
 }
 
 func TestGenerate_OK(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
+	workers := types.WorkerTasks{
+		{Id: "test", Command: "fake", User: "test", Directory: "/tmp/dir"},
+		{Id: "test2", Command: "ping", User: "test2", Directory: "/tmp/dir"},
+	}
+	ctx.Config.Workers = workers
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	fsMock := mockAfero.NewMockFs(ctrl)
@@ -127,5 +149,49 @@ func TestGenerateProgramList(t *testing.T) {
 		{Id: "test2", Command: "fake"},
 	}
 	output := generateProgramList(workers)
-	assert.Equal(t, 0, strings.Compare(output, "test,test2"))
+	assert.Equal(t, output, "test,test2")
+}
+
+func TestDeleteFile_OK(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	outputDir := "/tmp/subdir"
+	outputPath := outputDir + "/output.txt"
+	_ = afero.WriteFile(ctx.Fs, outputPath, []byte{}, 0644)
+
+	err := deleteFile(ctx, outputPath)
+
+	fileExist, _ := afero.Exists(ctx.Fs, outputPath)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, false, fileExist)
+}
+
+func TestDeleteFile_FileDoesNotExist(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	outputDir := "/tmp/subdir"
+	outputPath := outputDir + "/output.txt"
+
+	err := deleteFile(ctx, outputPath)
+
+	fileExist, _ := afero.Exists(ctx.Fs, outputPath)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, false, fileExist)
+}
+
+func TestDeleteFile_Error(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	outputDir := "/tmp/subdir"
+	outputPath := outputDir + "/output.txt"
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	fsMock := mockAfero.NewMockFs(ctrl)
+	ctx.Fs = fsMock
+	dirLogMock := mockOs.NewMockFileInfo(ctrl)
+	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(dirLogMock, nil)
+	fsMock.EXPECT().Remove(gomock.Eq(outputPath)).Times(1).Return(errors.New("fail"))
+
+	err := Generate(ctx, outputPath, FormatSupervisor, "myname")
+
+	assert.NotEqual(t, err, nil)
+	assert.Contains(t, err.Error(), "Error when deleting output file")
 }
