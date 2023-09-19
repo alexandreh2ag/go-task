@@ -87,10 +87,10 @@ func generateProgramList(workers types.WorkerTasks) string {
 
 func generateEnvVars(worker types.WorkerTask, groupName string) string {
 	envVars := []string{}
-	envVars = append(envVars, fmt.Sprintf(`GTASK_GROUPNAME="%s"`, groupName))
-	envVars = append(envVars, fmt.Sprintf(`GTASK_DIR="%s"`, worker.Directory))
-	envVars = append(envVars, fmt.Sprintf(`GTASK_USER="%s"`, worker.User))
-	envVars = append(envVars, fmt.Sprintf(`GTASK_ID="%s"`, worker.Id))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskGroupNameKey, groupName))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskDirKey, worker.Directory))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskUserKey, worker.User))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.Id))
 
 	return strings.Join(envVars, ",")
 }
