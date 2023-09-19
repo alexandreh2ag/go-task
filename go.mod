@@ -4,13 +4,13 @@ go 1.21.0
 
 require (
 	github.com/adhocore/gronx v1.6.5
-	github.com/go-playground/validator/v10 v10.15.1
+	github.com/go-playground/validator/v10 v10.15.4
 	github.com/jonboulle/clockwork v0.4.0
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.8.3
-	go.uber.org/mock v0.2.0
+	github.com/stretchr/testify v1.8.4
+	go.uber.org/mock v0.3.0
 )
 
 require (

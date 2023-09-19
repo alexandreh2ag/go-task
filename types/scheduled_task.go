@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alexandreh2ag/go-task/log"
 	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -33,12 +34,18 @@ func (s *ScheduledTask) Execute() *TaskResult {
 	result := &TaskResult{Status: Pending, Task: s}
 	s.TaskResult = result
 
-	args := splitCommand(s.Command)
+	extraVars := map[string]string{
+		GtaskIDKey:  s.Id,
+		GtaskDirKey: s.Directory,
+	}
+
+	args := splitCommand(os.Expand(s.Command, getEnvVars(extraVars)))
 	if len(args) > 1 {
 		cmd = exec.Command(args[0], args[1:]...)
 	} else {
 		cmd = exec.Command(args[0])
 	}
+
 	cmd.Dir = s.Directory
 	cmd.Stdout = &result.Output
 	cmd.Stderr = &result.Output
@@ -115,4 +122,13 @@ func splitCommand(command string) []string {
 		}
 	}
 	return result
+}
+
+func getEnvVars(extraVars map[string]string) func(string) string {
+	return func(key string) string {
+		if val, ok := extraVars[key]; ok {
+			return val
+		}
+		return os.Getenv(key)
+	}
 }

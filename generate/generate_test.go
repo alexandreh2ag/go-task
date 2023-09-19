@@ -179,14 +179,14 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUPNAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test\"\n\n" +
+		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test\"\n\n" +
 		"[program:test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUPNAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test2\"\n"
+		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test2\"\n"
 
 	ctx.Config.Workers = workers
 
@@ -286,6 +286,6 @@ func TestGenerateEnvVars(t *testing.T) {
 	output := generateEnvVars(worker, groupName)
 
 	assert.Equal(t,
-		fmt.Sprintf("GTASK_GROUPNAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.Id),
+		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.Id),
 		output)
 }

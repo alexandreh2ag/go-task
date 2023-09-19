@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"
+	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -276,6 +277,40 @@ func Test_splitCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, splitCommand(tt.command), "splitCommand(%v)", tt.command)
+		})
+	}
+}
+
+func Test_getEnvVars(t *testing.T) {
+	key := "GTASK_TESTING_GETENVVARS"
+	value := "foo"
+	_ = os.Setenv(key, value)
+	tests := []struct {
+		name      string
+		key       string
+		extraVars map[string]string
+		want      string
+	}{
+		{
+			name: "SuccessVarNotExist",
+			key:  key + "WRONG",
+			want: "",
+		},
+		{
+			name: "SuccessOSVar",
+			key:  key,
+			want: "foo",
+		},
+		{
+			name:      "SuccessGtaskVar",
+			key:       GtaskIDKey,
+			extraVars: map[string]string{GtaskIDKey: "bar"},
+			want:      "bar",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, getEnvVars(tt.extraVars)(tt.key), "getEnvVars(%v)", tt.extraVars)
 		})
 	}
 }
