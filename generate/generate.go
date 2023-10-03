@@ -77,20 +77,20 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	return tmpl.Execute(writer, ctx.Config.Workers)
 }
 
-func generateProgramList(workers types.WorkerTasks, prefix string) string {
+func generateProgramList(workers types.WorkerTasks) string {
 	programs := []string{}
 	for _, task := range workers {
-		programs = append(programs, prefix+"-"+task.Id)
+		programs = append(programs, task.PrefixedName())
 	}
 	return strings.Join(programs, ",")
 }
 
-func generateEnvVars(worker types.WorkerTask, groupName string) string {
+func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskGroupNameKey, groupName))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskGroupNameKey, worker.GroupName))
 	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskDirKey, worker.Directory))
 	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskUserKey, worker.User))
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.Id))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.PrefixedName()))
 
 	return strings.Join(envVars, ",")
 }

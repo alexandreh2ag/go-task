@@ -154,22 +154,23 @@ func TestGenerate_OK(t *testing.T) {
 
 func TestTemplateSupervisorFile_OK(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
-
+	groupName := "test-group"
 	workers := types.WorkerTasks{
 		{
 			Id:        "test",
 			Command:   "fake",
+			GroupName: groupName,
 			User:      "toto",
 			Directory: "/tmp/dir",
 		},
 		{
 			Id:        "test2",
 			Command:   "fake",
+			GroupName: groupName,
 			User:      "toto",
 			Directory: "/tmp/dir",
 		},
 	}
-	groupName := "test-group"
 
 	expectedOutput := "[group:test-group]\n" +
 		"programs=test-group-test,test-group-test2\n\n\n" +
@@ -179,14 +180,14 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test\"\n\n" +
+		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test-group-test\"\n\n" +
 		"[program:test-group-test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test2\"\n"
+		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test-group-test2\"\n"
 
 	ctx.Config.Workers = workers
 
@@ -199,22 +200,25 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 }
 
 func TestGenerateProgramList(t *testing.T) {
+	prefix := "pref"
 	workers := types.WorkerTasks{
 		{
 			Id:        "test",
 			Command:   "fake",
 			User:      "toto",
 			Directory: "/tmp/dir",
+			GroupName: prefix,
 		},
 		{
 			Id:        "test2",
 			Command:   "fake",
 			User:      "toto",
 			Directory: "/tmp/dir",
+			GroupName: prefix,
 		},
 	}
-	prefix := "pref"
-	output := generateProgramList(workers, prefix)
+
+	output := generateProgramList(workers)
 	assert.Equal(t, output, prefix+"-test,"+prefix+"-test2")
 }
 
@@ -277,16 +281,18 @@ func TestGenerate_NoErrorDeleteFile(t *testing.T) {
 }
 
 func TestGenerateEnvVars(t *testing.T) {
+	groupName := "group"
+
 	worker := types.WorkerTask{
 		Id:        "test2",
 		Command:   "fake",
 		User:      "toto",
+		GroupName: groupName,
 		Directory: "/tmp/dir",
 	}
-	groupName := "group"
-	output := generateEnvVars(worker, groupName)
+	output := generateEnvVars(worker)
 
 	assert.Equal(t,
-		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.Id),
+		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedName()),
 		output)
 }

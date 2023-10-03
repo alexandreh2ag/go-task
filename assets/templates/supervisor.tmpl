@@ -1,12 +1,12 @@
 [group:{{ groupName }}]
-programs={{ programs . groupName }}
+programs={{ programs .  }}
 
 {{ range . }}
-[program:{{ printf "%s-%s" groupName .Id }}]
+[program:{{ .PrefixedName }}]
 directory = {{ .Directory }}
 autorestart = true
 autostart = true
 user = {{ .User }}
 command = {{ .Command }}
-environment = {{ envs . groupName }}
+environment = {{ envs . }}
 {{ end }}
