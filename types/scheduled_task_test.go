@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/alexandreh2ag/go-task/log"
-	"github.com/go-playground/validator/v10"
+	gtaskValidator "github.com/alexandreh2ag/go-task/validator"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"
@@ -15,7 +15,7 @@ import (
 )
 
 func Test_ScheduledTask_SuccessValidate(t *testing.T) {
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	scheduled := ScheduledTask{
 		Id:       "test",
 		CronExpr: "* * * * *",
@@ -27,7 +27,7 @@ func Test_ScheduledTask_SuccessValidate(t *testing.T) {
 }
 
 func Test_ScheduledTask_SuccessValidateWithOptionalData(t *testing.T) {
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	scheduled := ScheduledTask{
 		Id:        "test",
 		CronExpr:  "* * * * *",
@@ -40,7 +40,7 @@ func Test_ScheduledTask_SuccessValidateWithOptionalData(t *testing.T) {
 }
 
 func Test_ScheduledTask_ErrorValidate(t *testing.T) {
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	scheduled := ScheduledTask{
 		Id:       "test",
 		CronExpr: "* * * * *",
@@ -52,7 +52,7 @@ func Test_ScheduledTask_ErrorValidate(t *testing.T) {
 }
 
 func Test_ScheduledTask_ErrorValidateComplex(t *testing.T) {
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	scheduled := ScheduledTask{
 		Id:        "test",
 		CronExpr:  "wrong",
@@ -62,7 +62,7 @@ func Test_ScheduledTask_ErrorValidateComplex(t *testing.T) {
 	err := validate.Struct(scheduled)
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Field validation for 'CronExpr' failed on the 'cron' tag")
+	assert.Contains(t, err.Error(), "Field validation for 'CronExpr' failed on the 'cron-expr' tag")
 	assert.Contains(t, err.Error(), "Field validation for 'Directory' failed on the 'dirpath' tag")
 }
 

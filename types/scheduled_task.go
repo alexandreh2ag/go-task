@@ -21,7 +21,7 @@ type ScheduledTasks = []*ScheduledTask
 
 type ScheduledTask struct {
 	Id         string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
-	CronExpr   string `mapstructure:"expr" validate:"required,cron"`
+	CronExpr   string `mapstructure:"expr" validate:"required,cron-expr"`
 	Command    string `mapstructure:"command" validate:"required"`
 	Directory  string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
 	TaskResult *TaskResult

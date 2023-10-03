@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	appCtx "github.com/alexandreh2ag/go-task/context"
+	gtaskValidator "github.com/alexandreh2ag/go-task/validator"
 	"github.com/go-playground/validator/v10"
 	"log/slog"
 
@@ -44,7 +45,7 @@ func GetRootPreRunEFn(ctx *appCtx.Context, validateCfg bool) func(*cobra.Command
 		initConfig(ctx, cmd)
 
 		if validateCfg {
-			validate := validator.New()
+			validate := gtaskValidator.New()
 			err = validate.Struct(ctx.Config)
 			if err != nil {
 
