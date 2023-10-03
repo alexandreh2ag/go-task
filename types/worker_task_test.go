@@ -88,6 +88,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 		tasks      WorkerTasks
 		user       string
 		workingDir string
+		groupName  string
 	}
 	tests := []struct {
 		name string
@@ -99,6 +100,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 			args: args{
 				tasks:      WorkerTasks{},
 				user:       "foo",
+				groupName:  "bar",
 				workingDir: "/app/foo/",
 			},
 			want: WorkerTasks{},
@@ -107,22 +109,34 @@ func TestPrepareWorkerTasks(t *testing.T) {
 			name: "SuccessMultipleTasks",
 			args: args{
 				tasks: WorkerTasks{
-					&WorkerTask{Id: "test", Command: "cmd"},
-					&WorkerTask{Id: "test2", Command: "cmd", User: "bar", Directory: "/app/bar/"},
+					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar"},
+					&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/"},
 				},
 				user:       "foo",
+				groupName:  "bar",
 				workingDir: "/app/foo/",
 			},
 			want: WorkerTasks{
-				&WorkerTask{Id: "test", Command: "cmd", User: "foo", Directory: "/app/foo/"},
-				&WorkerTask{Id: "test2", Command: "cmd", User: "bar", Directory: "/app/bar/"},
+				&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "foo", Directory: "/app/foo/"},
+				&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/"},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PrepareWorkerTasks(tt.args.tasks, tt.args.user, tt.args.workingDir)
+			PrepareWorkerTasks(tt.args.tasks, tt.args.groupName, tt.args.user, tt.args.workingDir)
 			assert.Equal(t, tt.want, tt.args.tasks)
 		})
 	}
+}
+
+func TestPrefixedName(t *testing.T) {
+	prefix := "group"
+	worker := WorkerTask{
+		Id:        "test",
+		Command:   "fake",
+		GroupName: prefix,
+	}
+
+	assert.Equal(t, worker.PrefixedName(), prefix+"-"+worker.Id)
 }
