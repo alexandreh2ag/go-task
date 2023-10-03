@@ -1,8 +1,8 @@
 [group:{{ groupName }}]
-programs={{ programs . }}
+programs={{ programs . groupName }}
 
 {{ range . }}
-[program:{{ .Id }}]
+[program:{{ printf "%s-%s" groupName .Id }}]
 directory = {{ .Directory }}
 autorestart = true
 autostart = true

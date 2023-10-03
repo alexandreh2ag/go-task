@@ -77,10 +77,10 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	return tmpl.Execute(writer, ctx.Config.Workers)
 }
 
-func generateProgramList(workers types.WorkerTasks) string {
+func generateProgramList(workers types.WorkerTasks, prefix string) string {
 	programs := []string{}
 	for _, task := range workers {
-		programs = append(programs, task.Id)
+		programs = append(programs, prefix+"-"+task.Id)
 	}
 	return strings.Join(programs, ",")
 }
