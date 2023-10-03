@@ -172,15 +172,15 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	groupName := "test-group"
 
 	expectedOutput := "[group:test-group]\n" +
-		"programs=test,test2\n\n\n" +
-		"[program:test]\n" +
+		"programs=test-group-test,test-group-test2\n\n\n" +
+		"[program:test-group-test]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
 		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test\"\n\n" +
-		"[program:test2]\n" +
+		"[program:test-group-test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
@@ -213,8 +213,9 @@ func TestGenerateProgramList(t *testing.T) {
 			Directory: "/tmp/dir",
 		},
 	}
-	output := generateProgramList(workers)
-	assert.Equal(t, output, "test,test2")
+	prefix := "pref"
+	output := generateProgramList(workers, prefix)
+	assert.Equal(t, output, prefix+"-test,"+prefix+"-test2")
 }
 
 func TestDeleteFile_OK(t *testing.T) {
