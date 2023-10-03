@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alexandreh2ag/go-task/context"
+	gtaskValidator "github.com/alexandreh2ag/go-task/validator"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,7 @@ func GetValidateCmd(ctx *context.Context) *cobra.Command {
 
 func GetValidateRunFn(ctx *context.Context) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		validate := validator.New()
+		validate := gtaskValidator.New()
 		err := validate.Struct(ctx.Config)
 		if err != nil {
 

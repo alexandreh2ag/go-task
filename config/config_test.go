@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/alexandreh2ag/go-task/types"
+	gtaskValidator "github.com/alexandreh2ag/go-task/validator"
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -27,7 +28,7 @@ func Test_ConfigWorkers_SuccessValidateEmpty(t *testing.T) {
 
 func Test_ConfigWorkers_SuccessValidate(t *testing.T) {
 	cfg := DefaultConfig()
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	cfg.Workers = types.WorkerTasks{
 		{Id: "test", Command: "fake"},
 		{Id: "test2", Command: "fake"},
@@ -43,7 +44,7 @@ func Test_ConfigWorkers_SuccessValidate(t *testing.T) {
 
 func Test_ConfigWorkers_ErrorValidateDivet(t *testing.T) {
 	cfg := DefaultConfig()
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	cfg.Workers = types.WorkerTasks{
 		{Id: "test", Command: "fake"},
 		{Id: "test2"},
@@ -56,12 +57,12 @@ func Test_ConfigWorkers_ErrorValidateDivet(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Config.Workers[1].Command' Error:Field validation for 'Command' failed on the 'required' tag")
-	assert.Contains(t, err.Error(), "Config.Scheduled[1].CronExpr' Error:Field validation for 'CronExpr' failed on the 'cron' tag")
+	assert.Contains(t, err.Error(), "Config.Scheduled[1].CronExpr' Error:Field validation for 'CronExpr' failed on the 'cron-expr' tag")
 }
 
 func Test_ConfigWorkers_ErrorValidateDuplicateId(t *testing.T) {
 	cfg := DefaultConfig()
-	validate := validator.New()
+	validate := gtaskValidator.New()
 	cfg.Workers = types.WorkerTasks{
 		{Id: "test", Command: "fake"},
 		{Id: "test", Command: "fake"},
