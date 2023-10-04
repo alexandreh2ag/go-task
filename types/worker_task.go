@@ -1,15 +1,46 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+	"strings"
+)
 
-type WorkerTasks = []*WorkerTask
+type WorkerTasks []*WorkerTask
+
+func (ws WorkerTasks) GetUniqueExtraGroups() []string {
+	uniqueExtraGroups := []string{}
+	for _, task := range ws {
+		for _, group := range task.ExtraGroups {
+			if !slices.Contains(uniqueExtraGroups, group) {
+				uniqueExtraGroups = append(uniqueExtraGroups, group)
+			}
+		}
+	}
+	return uniqueExtraGroups
+}
+
+func (ws WorkerTasks) GetProgramInGroup(selectedGroup string) []*WorkerTask {
+	workerTasks := []*WorkerTask{}
+	if strings.Compare("", selectedGroup) == 0 {
+		return ws
+	}
+
+	for _, task := range ws {
+		if slices.Contains(task.ExtraGroups, selectedGroup) {
+			workerTasks = append(workerTasks, task)
+		}
+	}
+	return workerTasks
+}
 
 type WorkerTask struct {
-	Id        string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
-	Command   string `mapstructure:"command" validate:"required"`
-	GroupName string
-	User      string `mapstructure:"user" validate:"omitempty,required,alphanum"`
-	Directory string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	Id          string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
+	Command     string `mapstructure:"command" validate:"required"`
+	GroupName   string
+	ExtraGroups []string `mapstructure:"extra_groups" validate:"omitempty,dive,excludesall=!@#$ "`
+	User        string   `mapstructure:"user" validate:"omitempty,required,alphanum"`
+	Directory   string   `mapstructure:"directory" validate:"omitempty,required,dirpath"`
 }
 
 func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string) {

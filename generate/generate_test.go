@@ -173,7 +173,7 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	}
 
 	expectedOutput := "[group:test-group]\n" +
-		"programs=test-group-test,test-group-test2\n\n\n" +
+		"programs=test-group-test,test-group-test2\n\n" +
 		"[program:test-group-test]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
@@ -218,7 +218,7 @@ func TestGenerateProgramList(t *testing.T) {
 		},
 	}
 
-	output := generateProgramList(workers)
+	output := generateProgramList(workers, "")
 	assert.Equal(t, output, prefix+"-test,"+prefix+"-test2")
 }
 

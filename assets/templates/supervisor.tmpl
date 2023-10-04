@@ -1,7 +1,11 @@
 [group:{{ groupName }}]
-programs={{ programs .  }}
+programs={{ programs . "" }}
+{{ range .GetUniqueExtraGroups }}
+[group:{{ printf "%s-%s" groupName . }}]
+programs={{ programs tasks .  }}
+{{ end }}
 
-{{ range . }}
+{{- range . }}
 [program:{{ .PrefixedName }}]
 directory = {{ .Directory }}
 autorestart = true

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+	"slices"
 	"testing"
 )
 
@@ -139,4 +140,42 @@ func TestPrefixedName(t *testing.T) {
 	}
 
 	assert.Equal(t, worker.PrefixedName(), prefix+"-"+worker.Id)
+}
+
+func TestGetUniqueExtraGroupsSingleResult(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	extraGroups := tasks.GetUniqueExtraGroups()
+	assert.Equal(t, slices.Contains(extraGroups, "foo"), true)
+	assert.Equal(t, len(extraGroups), 1)
+}
+
+func TestGetUniqueExtraGroupsMultipleResult(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	extraGroups := tasks.GetUniqueExtraGroups()
+	assert.Equal(t, slices.Contains(extraGroups, "foo"), true)
+	assert.Equal(t, slices.Contains(extraGroups, "bar"), true)
+	assert.Equal(t, len(extraGroups), 2)
+}
+func TestGetProgramInGroupAll(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	selectedTask := tasks.GetProgramInGroup("")
+	assert.Equal(t, len(selectedTask), 2)
+}
+
+func TestGetProgramInGroup(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	selectedTask := tasks.GetProgramInGroup("bar")
+	assert.Equal(t, len(selectedTask), 1)
 }

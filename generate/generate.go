@@ -68,6 +68,7 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 		"groupName": func() string { return groupName },
 		"programs":  generateProgramList,
 		"envs":      generateEnvVars,
+		"tasks":     func() types.WorkerTasks { return ctx.Config.Workers },
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
@@ -77,9 +78,9 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	return tmpl.Execute(writer, ctx.Config.Workers)
 }
 
-func generateProgramList(workers types.WorkerTasks) string {
+func generateProgramList(workers types.WorkerTasks, group string) string {
 	programs := []string{}
-	for _, task := range workers {
+	for _, task := range workers.GetProgramInGroup(group) {
 		programs = append(programs, task.PrefixedName())
 	}
 	return strings.Join(programs, ",")
