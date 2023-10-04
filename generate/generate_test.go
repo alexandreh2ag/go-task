@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"
+	"strings"
 	"testing"
 )
 
@@ -173,7 +174,7 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	}
 
 	expectedOutput := "[group:test-group]\n" +
-		"programs=test-group-test,test-group-test2\n\n\n" +
+		"programs=test-group-test,test-group-test2\n\n" +
 		"[program:test-group-test]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
@@ -197,29 +198,6 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, expectedOutput, buffer.String())
-}
-
-func TestGenerateProgramList(t *testing.T) {
-	prefix := "pref"
-	workers := types.WorkerTasks{
-		{
-			Id:        "test",
-			Command:   "fake",
-			User:      "toto",
-			Directory: "/tmp/dir",
-			GroupName: prefix,
-		},
-		{
-			Id:        "test2",
-			Command:   "fake",
-			User:      "toto",
-			Directory: "/tmp/dir",
-			GroupName: prefix,
-		},
-	}
-
-	output := generateProgramList(workers)
-	assert.Equal(t, output, prefix+"-test,"+prefix+"-test2")
 }
 
 func TestDeleteFile_OK(t *testing.T) {
@@ -293,6 +271,18 @@ func TestGenerateEnvVars(t *testing.T) {
 	output := generateEnvVars(worker)
 
 	assert.Equal(t,
-		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedName()),
+		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedId()),
 		output)
+}
+
+func TestJoin(t *testing.T) {
+	elements := []string{"a", "b"}
+	separator := "-"
+	assert.Equal(t, join(elements, separator), strings.Join(elements, separator))
+}
+
+func TestGetTasks(t *testing.T) {
+	ctx := context.DefaultContext()
+	result := getTasks(ctx)
+	assert.IsType(t, func() types.WorkerTasks { return nil }, result)
 }

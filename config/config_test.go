@@ -76,3 +76,20 @@ func Test_ConfigWorkers_ErrorValidateDuplicateId(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Error:Field validation for 'Workers' failed on the 'unique' tag")
 }
+
+func Test_ConfigWorkers_ErrorValidateExtraGroups(t *testing.T) {
+	cfg := DefaultConfig()
+	validate := gtaskValidator.New()
+	cfg.Workers = types.WorkerTasks{
+		{Id: "test1", Command: "fake"},
+		{Id: "test2", Command: "fake", ExtraGroups: []string{"foo!"}},
+	}
+	cfg.Scheduled = types.ScheduledTasks{
+		{Id: "test3", CronExpr: "* * * * *", Command: "fake"},
+		{Id: "test4", CronExpr: "* * * * *", Command: "fake"},
+	}
+	err := validate.Struct(cfg)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Error:Field validation for 'ExtraGroups")
+}

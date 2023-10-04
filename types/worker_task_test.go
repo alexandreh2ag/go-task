@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+	"slices"
 	"testing"
 )
 
@@ -138,5 +139,63 @@ func TestPrefixedName(t *testing.T) {
 		GroupName: prefix,
 	}
 
-	assert.Equal(t, worker.PrefixedName(), prefix+"-"+worker.Id)
+	assert.Equal(t, worker.PrefixedId(), prefix+"-"+worker.Id)
+}
+
+func TestGetUniqueExtraGroupsSingleResult(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	extraGroups := tasks.GetUniqueExtraGroups()
+	assert.Equal(t, slices.Contains(extraGroups, "foo"), true)
+	assert.Equal(t, len(extraGroups), 1)
+}
+
+func TestGetUniqueExtraGroupsMultipleResult(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	extraGroups := tasks.GetUniqueExtraGroups()
+	assert.Equal(t, slices.Contains(extraGroups, "foo"), true)
+	assert.Equal(t, slices.Contains(extraGroups, "bar"), true)
+	assert.Equal(t, len(extraGroups), 2)
+}
+func TestGetTasksInGroupAll(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	selectedTask := tasks.GetTasksInGroup("")
+	assert.Equal(t, len(selectedTask), 2)
+}
+
+func TestGetTasksInGroup(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo", "bar"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	selectedTask := tasks.GetTasksInGroup("bar")
+	assert.Equal(t, len(selectedTask), 1)
+}
+
+func TestGetTasksInGroupNoResult(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	selectedTask := tasks.GetTasksInGroup("bar")
+	assert.Equal(t, len(selectedTask), 0)
+}
+
+func TestGetAllPrefixedId(t *testing.T) {
+	tasks := WorkerTasks{
+		&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ExtraGroups: []string{"foo"}},
+		&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", ExtraGroups: []string{"foo"}},
+	}
+	ids := tasks.GetAllPrefixedId()
+	assert.Contains(t, ids, tasks[0].PrefixedId())
+	assert.Contains(t, ids, tasks[1].PrefixedId())
+	assert.Equal(t, len(ids), 2)
 }
