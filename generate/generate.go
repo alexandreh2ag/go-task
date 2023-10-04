@@ -66,7 +66,7 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 		"now":       time.Now,
 		"version":   version.GetFormattedVersion,
 		"groupName": func() string { return groupName },
-		"programs":  generateProgramList,
+		"join":      strings.Join,
 		"envs":      generateEnvVars,
 		"tasks":     func() types.WorkerTasks { return ctx.Config.Workers },
 	}
@@ -78,20 +78,12 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	return tmpl.Execute(writer, ctx.Config.Workers)
 }
 
-func generateProgramList(workers types.WorkerTasks, group string) string {
-	programs := []string{}
-	for _, task := range workers.GetProgramInGroup(group) {
-		programs = append(programs, task.PrefixedName())
-	}
-	return strings.Join(programs, ",")
-}
-
 func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
 	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskGroupNameKey, worker.GroupName))
 	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskDirKey, worker.Directory))
 	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskUserKey, worker.User))
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.PrefixedName()))
+	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.PrefixedId()))
 
 	return strings.Join(envVars, ",")
 }

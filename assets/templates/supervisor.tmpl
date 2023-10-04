@@ -1,12 +1,12 @@
 [group:{{ groupName }}]
-programs={{ programs . "" }}
+programs={{ join .GetAllPrefixedId "," }}
 {{ range .GetUniqueExtraGroups }}
 [group:{{ printf "%s-%s" groupName . }}]
-programs={{ programs tasks .  }}
+programs={{ join ((tasks.GetTasksInGroup  .).GetAllPrefixedId)  ","  }}
 {{ end }}
 
 {{- range . }}
-[program:{{ .PrefixedName }}]
+[program:{{ .PrefixedId }}]
 directory = {{ .Directory }}
 autorestart = true
 autostart = true

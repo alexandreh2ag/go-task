@@ -199,29 +199,6 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	assert.Equal(t, expectedOutput, buffer.String())
 }
 
-func TestGenerateProgramList(t *testing.T) {
-	prefix := "pref"
-	workers := types.WorkerTasks{
-		{
-			Id:        "test",
-			Command:   "fake",
-			User:      "toto",
-			Directory: "/tmp/dir",
-			GroupName: prefix,
-		},
-		{
-			Id:        "test2",
-			Command:   "fake",
-			User:      "toto",
-			Directory: "/tmp/dir",
-			GroupName: prefix,
-		},
-	}
-
-	output := generateProgramList(workers, "")
-	assert.Equal(t, output, prefix+"-test,"+prefix+"-test2")
-}
-
 func TestDeleteFile_OK(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	outputDir := "/tmp/subdir"
@@ -293,6 +270,6 @@ func TestGenerateEnvVars(t *testing.T) {
 	output := generateEnvVars(worker)
 
 	assert.Equal(t,
-		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedName()),
+		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedId()),
 		output)
 }

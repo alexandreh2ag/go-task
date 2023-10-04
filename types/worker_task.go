@@ -20,8 +20,8 @@ func (ws WorkerTasks) GetUniqueExtraGroups() []string {
 	return uniqueExtraGroups
 }
 
-func (ws WorkerTasks) GetProgramInGroup(selectedGroup string) []*WorkerTask {
-	workerTasks := []*WorkerTask{}
+func (ws WorkerTasks) GetTasksInGroup(selectedGroup string) WorkerTasks {
+	workerTasks := WorkerTasks{}
 	if strings.Compare("", selectedGroup) == 0 {
 		return ws
 	}
@@ -32,6 +32,14 @@ func (ws WorkerTasks) GetProgramInGroup(selectedGroup string) []*WorkerTask {
 		}
 	}
 	return workerTasks
+}
+
+func (ws WorkerTasks) GetAllPrefixedId() []string {
+	ids := []string{}
+	for _, task := range ws {
+		ids = append(ids, task.PrefixedId())
+	}
+	return ids
 }
 
 type WorkerTask struct {
@@ -57,6 +65,6 @@ func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string) {
 	}
 }
 
-func (w *WorkerTask) PrefixedName() string {
+func (w *WorkerTask) PrefixedId() string {
 	return fmt.Sprintf("%s-%s", w.GroupName, w.Id)
 }
