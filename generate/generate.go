@@ -64,11 +64,11 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 
 	extraVars := template.FuncMap{
 		"now":       time.Now,
+		"join":      join,
 		"version":   version.GetFormattedVersion,
 		"groupName": func() string { return groupName },
-		"join":      strings.Join,
 		"envs":      generateEnvVars,
-		"tasks":     func() types.WorkerTasks { return ctx.Config.Workers },
+		"tasks":     getTasks(ctx),
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
@@ -96,4 +96,12 @@ func deleteFile(ctx *context.Context, path string) error {
 		}
 	}
 	return err
+}
+
+func join(elements []string, seperator string) string {
+	return strings.Join(elements, seperator)
+}
+
+func getTasks(ctx *context.Context) func() types.WorkerTasks {
+	return func() types.WorkerTasks { return ctx.Config.Workers }
 }
