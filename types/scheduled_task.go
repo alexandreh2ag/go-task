@@ -17,7 +17,7 @@ const (
 	Failed
 )
 
-type ScheduledTasks []*ScheduledTask
+type ScheduledTasks = []*ScheduledTask
 
 type ScheduledTask struct {
 	Id         string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
