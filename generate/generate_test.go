@@ -256,14 +256,35 @@ func TestGenerate_ErrorDeleteFile(t *testing.T) {
 	defer ctrl.Finish()
 	fsMock := mockAfero.NewMockFs(ctrl)
 	ctx.Fs = fsMock
-	dirLogMock := mockOs.NewMockFileInfo(ctrl)
-	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(dirLogMock, nil)
+	outputDirMock := mockOs.NewMockFileInfo(ctrl)
+	outputMock := mockOs.NewMockFileInfo(ctrl)
+	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(outputDirMock, nil)
+	fsMock.EXPECT().Stat(gomock.Eq(outputPath)).Times(1).Return(outputMock, nil)
 	fsMock.EXPECT().Remove(gomock.Eq(outputPath)).Times(1).Return(errors.New("fail"))
 
 	err := Generate(ctx, outputPath, FormatSupervisor, "myname")
 
 	assert.NotEqual(t, err, nil)
 	assert.Contains(t, err.Error(), "Error when deleting output file")
+}
+
+func TestGenerate_NoErrorNoWorkerAndNoOutputFile(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	outputDir := "/tmp/subdir"
+	outputPath := outputDir + "/output.txt"
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	fsMock := mockAfero.NewMockFs(ctrl)
+	ctx.Fs = fsMock
+	outputDirMock := mockOs.NewMockFileInfo(ctrl)
+	outputMock := mockOs.NewMockFileInfo(ctrl)
+	fsMock.EXPECT().Stat(gomock.Eq(outputDir)).Times(1).Return(outputDirMock, nil)
+	fsMock.EXPECT().Stat(gomock.Eq(outputPath)).Times(1).Return(outputMock, errors.New("fail not found"))
+
+	err := Generate(ctx, outputPath, FormatSupervisor, "myname")
+
+	assert.NoError(t, err)
 }
 
 func TestGenerate_NoErrorDeleteFile(t *testing.T) {

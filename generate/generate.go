@@ -7,6 +7,7 @@ import (
 	"github.com/alexandreh2ag/go-task/context"
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
+	"github.com/spf13/afero"
 	"io"
 	"io/fs"
 	"path/filepath"
@@ -26,11 +27,14 @@ func Generate(ctx *context.Context, outputPath string, format string, groupName 
 	}
 
 	if len(ctx.Config.Workers) == 0 {
-		err = deleteFile(ctx, outputPath)
-		if err != nil {
-			return errors.New(fmt.Sprintf("Error when deleting output file: %s", err.Error()))
+		afs := &afero.Afero{Fs: ctx.Fs}
+		if ok, _ := afs.Exists(outputPath); ok {
+			err = deleteFile(ctx, outputPath)
+			if err != nil {
+				return errors.New(fmt.Sprintf("Error when deleting output file: %s", err.Error()))
+			}
 		}
-		return err
+		return nil
 	}
 
 	outputFile, err := ctx.Fs.Create(outputPath)
