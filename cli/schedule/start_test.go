@@ -25,6 +25,23 @@ func TestGetScheduleStartCmd_SuccessWithEmptyScheduledTasks(t *testing.T) {
 
 }
 
+func TestGetScheduleStartCmd_SuccessWithTaskFilter(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
+	ctx.Clock = fakeClock
+	cmd := GetScheduleStartCmd(ctx)
+	cmd.SetArgs([]string{"test,test2"})
+	go func() {
+		err := cmd.Execute()
+		assert.NoError(t, err)
+	}()
+
+	fakeClock.BlockUntil(1)
+	fakeClock.Advance(1 * time.Second)
+	time.Sleep(50 * time.Millisecond)
+
+}
+
 func TestGetScheduleStartCmd_ErrorWithWrongTickDuration(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	ctx.Clock = clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC))

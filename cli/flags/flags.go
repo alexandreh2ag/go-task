@@ -13,6 +13,7 @@ const (
 	TimeZone      = "timezone"
 	ResultPath    = "result-path"
 	NoResultPrint = "no-result-print"
+	Force         = "force"
 )
 
 func AddFlagWorkingDir(cmd *cobra.Command) {
@@ -72,5 +73,13 @@ func AddFlagResultPath(cmd *cobra.Command) {
 		ResultPath,
 		"",
 		"Define path to save tasks results (default: no logs file)",
+	)
+}
+
+func AddFlagForce(cmd *cobra.Command) {
+	cmd.Flags().Bool(
+		Force,
+		false,
+		"Force will ignore cron expr on each task",
 	)
 }
