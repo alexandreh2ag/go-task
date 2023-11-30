@@ -73,6 +73,8 @@ func TestRun(t *testing.T) {
 		ref            time.Time
 		noResultPrint  bool
 		resultPath     string
+		taskFilter     []string
+		force          bool
 	}
 	tests := []struct {
 		name     string
@@ -116,6 +118,79 @@ func TestRun(t *testing.T) {
 					Status:   types.Failed,
 					Error:    &exec.Error{Name: "wrong", Err: errors.New("executable file not found in $PATH")},
 					Output:   *bytes.NewBuffer(nil),
+					StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+					FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+		},
+		{
+			name: "SuccessWithScheduledTasksAndTaskFilter",
+			args: args{
+				scheduledTasks: types.ScheduledTasks{
+					&types.ScheduledTask{Id: "test", Command: "echo test", CronExpr: "* * * * *", Logger: ctx.Logger},
+					&types.ScheduledTask{Id: "test2", Command: "echo test", CronExpr: "* * * * *", Logger: ctx.Logger},
+				},
+				ref:           time.Date(2023, time.January, 25, 15, 4, 0, 0, time.UTC),
+				taskFilter:    []string{"test"},
+				noResultPrint: true,
+				resultPath:    "",
+			},
+			mockFunc: func(ctrl *gomock.Controller, fs *mockAfero.MockFs) {},
+			want: []*types.TaskResult{
+				{
+					Status:   types.Succeed,
+					Output:   *bytes.NewBuffer([]byte("test\n")),
+					StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+					FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+		},
+		{
+			name: "SuccessWithScheduledTasksAndTaskFilterAndForceFlag",
+			args: args{
+				scheduledTasks: types.ScheduledTasks{
+					&types.ScheduledTask{Id: "test", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger},
+					&types.ScheduledTask{Id: "test2", Command: "echo test2", CronExpr: "0 0 * * *", Logger: ctx.Logger},
+				},
+				ref:           time.Date(2023, time.January, 25, 15, 4, 0, 0, time.UTC),
+				taskFilter:    []string{"test"},
+				force:         true,
+				noResultPrint: true,
+				resultPath:    "",
+			},
+			mockFunc: func(ctrl *gomock.Controller, fs *mockAfero.MockFs) {},
+			want: []*types.TaskResult{
+				{
+					Status:   types.Succeed,
+					Output:   *bytes.NewBuffer([]byte("test\n")),
+					StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+					FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+		},
+		{
+			name: "SuccessWithScheduledTasksAndForceFlag",
+			args: args{
+				scheduledTasks: types.ScheduledTasks{
+					&types.ScheduledTask{Id: "test", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger},
+					&types.ScheduledTask{Id: "test2", Command: "echo test2", CronExpr: "0 0 * * *", Logger: ctx.Logger},
+				},
+				ref:           time.Date(2023, time.January, 25, 15, 4, 0, 0, time.UTC),
+				force:         true,
+				noResultPrint: true,
+				resultPath:    "",
+			},
+			mockFunc: func(ctrl *gomock.Controller, fs *mockAfero.MockFs) {},
+			want: []*types.TaskResult{
+				{
+					Status:   types.Succeed,
+					Output:   *bytes.NewBuffer([]byte("test\n")),
+					StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+					FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					Status:   types.Succeed,
+					Output:   *bytes.NewBuffer([]byte("test2\n")),
 					StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 					FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 				},
@@ -203,7 +278,7 @@ func TestRun(t *testing.T) {
 			ctx.Config.Scheduled = tt.args.scheduledTasks
 			tt.mockFunc(ctrl, fsMock)
 			ctx.Fs = fsMock
-			got := Run(ctx, tt.args.ref, tt.args.noResultPrint, tt.args.resultPath)
+			got := Run(ctx, tt.args.ref, tt.args.taskFilter, tt.args.force, tt.args.noResultPrint, tt.args.resultPath)
 
 			for _, result := range got {
 				assert.WithinDuration(t, result.StartAt, result.FinishAt, time.Second)
@@ -400,7 +475,7 @@ func TestStart_SuccessFirstTick(t *testing.T) {
 	ctx.Clock = fakeClock
 
 	go func() {
-		err := Start(ctx, 1, "Europe/Paris", true, "")
+		err := Start(ctx, 1, "Europe/Paris", []string{}, true, "")
 		assert.NoError(t, err)
 	}()
 
@@ -421,7 +496,7 @@ func TestStart_SuccessFirstTickAndTick(t *testing.T) {
 	ctx.Clock = fakeClock
 
 	go func() {
-		err := Start(ctx, 1, "Europe/Paris", true, "")
+		err := Start(ctx, 1, "Europe/Paris", []string{}, true, "")
 		assert.NoError(t, err)
 	}()
 
@@ -443,7 +518,7 @@ func TestStart_ErrorWhenNextTickAfterFailed(t *testing.T) {
 	fakeClock := clockwork.NewFakeClockAt(time.Date(1970, time.January, 1, 0, 0, 59, 0, time.UTC))
 	ctx.Clock = fakeClock
 
-	err := Start(ctx, 0, "Europe/Paris", true, "")
+	err := Start(ctx, 0, "Europe/Paris", []string{}, true, "")
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), "could not calculate next tick of expr */0 * * * *: tried so hard")
 }
@@ -458,7 +533,7 @@ func TestStart_ErrorWhenGetCurrentTimeFailed(t *testing.T) {
 	ctx.Clock = fakeClock
 
 	go func() {
-		err := Start(ctx, 1, "Europe/Wrong", true, "")
+		err := Start(ctx, 1, "Europe/Wrong", []string{}, true, "")
 		assert.Error(t, err)
 		assert.Equal(t, err.Error(), "unknown time zone Europe/Wrong")
 	}()

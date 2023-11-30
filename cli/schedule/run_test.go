@@ -39,6 +39,30 @@ func TestGetScheduleRunCmd_SuccessWithTimezoneOpt(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGetScheduleRunCmd_SuccessWithForceOpt(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	ctx.Config.Scheduled = types.ScheduledTasks{
+		&types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"},
+	}
+	cmd := GetScheduleRunCmd(ctx)
+
+	cmd.SetArgs([]string{"--" + flags.Force})
+	err := cmd.Execute()
+	assert.NoError(t, err)
+}
+
+func TestGetScheduleRunCmd_SuccessWithTaskFilter(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	ctx.Config.Scheduled = types.ScheduledTasks{
+		&types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"},
+	}
+	cmd := GetScheduleRunCmd(ctx)
+
+	cmd.SetArgs([]string{"test,test2"})
+	err := cmd.Execute()
+	assert.NoError(t, err)
+}
+
 func TestGetScheduleRunCmd_SuccessWithDirectoryOpt(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	task := &types.ScheduledTask{Id: "test", Command: "echo", CronExpr: "0 0 * * *"}

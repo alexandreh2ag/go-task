@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"slices"
 	"sync"
 	"syscall"
 	"time"
@@ -35,7 +36,7 @@ func GetCurrentTime(now time.Time, timezone string) (time.Time, error) {
 	return time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location()), nil
 }
 
-func Start(ctx *context.Context, tick int, timezone string, noResultPrint bool, resultPath string) error {
+func Start(ctx *context.Context, tick int, timezone string, taskFilter []string, noResultPrint bool, resultPath string) error {
 	var refTime time.Time
 	firstRun := true
 
@@ -61,7 +62,7 @@ func Start(ctx *context.Context, tick int, timezone string, noResultPrint bool, 
 		if firstRun {
 			firstRun = false
 			ctx.Logger.Debug("first tick")
-			Run(ctx, refTime, noResultPrint, resultPath)
+			Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
 		}
 		select {
 		case <-ticker.Chan():
@@ -69,7 +70,7 @@ func Start(ctx *context.Context, tick int, timezone string, noResultPrint bool, 
 			// can ignore error because schedule.GetCurrentTime used at top
 			refTime, _ = GetCurrentTime(ctx.Clock.Now(), timezone)
 
-			Run(ctx, refTime, noResultPrint, resultPath)
+			Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
 
 		case sig := <-sigs:
 			ctx.Logger.Info(fmt.Sprintf("%s signal received, exiting...", sig.String()))
@@ -82,7 +83,7 @@ func Start(ctx *context.Context, tick int, timezone string, noResultPrint bool, 
 	}
 }
 
-func Run(ctx *context.Context, ref time.Time, noResultPrint bool, resultPath string) []*types.TaskResult {
+func Run(ctx *context.Context, ref time.Time, taskFilter []string, force bool, noResultPrint bool, resultPath string) []*types.TaskResult {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -90,12 +91,17 @@ func Run(ctx *context.Context, ref time.Time, noResultPrint bool, resultPath str
 	results := []*types.TaskResult{}
 
 	for _, task := range ctx.Config.Scheduled {
+		if len(taskFilter) != 0 && !slices.Contains(taskFilter, task.Id) {
+			ctx.Logger.Info(fmt.Sprintf("Task %s skipped due to the filter %v", task.Id, taskFilter))
+			continue
+		}
+
 		mustRun, err := gron.IsDue(task.CronExpr, ref)
 		if err != nil {
 			task.Logger.Error(fmt.Sprintf("Scheduled task %s fail to check if must run", task.Id))
 		}
 
-		if mustRun {
+		if mustRun || force {
 			task.Logger.Info(fmt.Sprintf("Scheduled task %s will run", task.Id))
 			wg.Add(1)
 			go func(task *types.ScheduledTask, noResultPrint bool, resultPath string) {
