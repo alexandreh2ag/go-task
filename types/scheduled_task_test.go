@@ -212,10 +212,10 @@ func TestScheduledTask_Execute(t *testing.T) {
 			}
 			tt.want.Task = s
 			res := s.Execute()
-			assert.WithinDuration(t, s.TaskResult.StartAt, s.TaskResult.FinishAt, time.Second)
-			assert.NotNil(t, s.TaskResult.Task)
-			s.TaskResult.StartAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
-			s.TaskResult.FinishAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+			assert.WithinDuration(t, s.LatestTaskResult.StartAt, s.LatestTaskResult.FinishAt, time.Second)
+			assert.NotNil(t, s.LatestTaskResult.Task)
+			s.LatestTaskResult.StartAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+			s.LatestTaskResult.FinishAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 			assert.Equalf(t, tt.want, res, "Execute()")
 		})
 	}

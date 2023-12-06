@@ -61,16 +61,16 @@ func Start(ctx *context.Context, tick int, timezone string, taskFilter []string,
 	for {
 		if firstRun {
 			firstRun = false
-			ctx.Logger.Debug("first tick")
-			Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
+			ctx.Logger.Debug("first tick", "now", time.Now())
+			go Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
 		}
 		select {
 		case <-ticker.Chan():
-			ctx.Logger.Debug("tick")
+			ctx.Logger.Debug("tick", "now", time.Now())
 			// can ignore error because schedule.GetCurrentTime used at top
 			refTime, _ = GetCurrentTime(ctx.Clock.Now(), timezone)
 
-			Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
+			go Run(ctx, refTime, taskFilter, false, noResultPrint, resultPath)
 
 		case sig := <-sigs:
 			ctx.Logger.Info(fmt.Sprintf("%s signal received, exiting...", sig.String()))
@@ -81,6 +81,7 @@ func Start(ctx *context.Context, tick int, timezone string, taskFilter []string,
 			return nil
 		}
 	}
+
 }
 
 func Run(ctx *context.Context, ref time.Time, taskFilter []string, force bool, noResultPrint bool, resultPath string) []*types.TaskResult {
