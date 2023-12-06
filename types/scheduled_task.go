@@ -20,11 +20,11 @@ const (
 type ScheduledTasks = []*ScheduledTask
 
 type ScheduledTask struct {
-	Id         string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
-	CronExpr   string `mapstructure:"expr" validate:"required,cron-expr"`
-	Command    string `mapstructure:"command" validate:"required"`
-	Directory  string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
-	TaskResult *TaskResult
+	Id               string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
+	CronExpr         string `mapstructure:"expr" validate:"required,cron-expr"`
+	Command          string `mapstructure:"command" validate:"required"`
+	Directory        string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	LatestTaskResult *TaskResult
 
 	Logger *slog.Logger
 }
@@ -32,7 +32,7 @@ type ScheduledTask struct {
 func (s *ScheduledTask) Execute() *TaskResult {
 	var cmd *exec.Cmd
 	result := &TaskResult{Status: Pending, Task: s}
-	s.TaskResult = result
+	s.LatestTaskResult = result
 
 	extraVars := map[string]string{
 		GtaskIDKey:  s.Id,
