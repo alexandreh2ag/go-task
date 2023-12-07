@@ -295,6 +295,24 @@ func TestRun(t *testing.T) {
 	}
 }
 
+func TestRun_SuccessWithOneTaskResult(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	scheduledTasks := types.ScheduledTasks{
+		&types.ScheduledTask{Id: "test", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger, LatestTaskResult: &types.TaskResult{Status: types.Pending}},
+		&types.ScheduledTask{Id: "test2", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger, LatestTaskResult: &types.TaskResult{Status: types.Succeed}},
+	}
+	want := types.ScheduledTasks{
+		&types.ScheduledTask{Id: "test", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger, LatestTaskResult: &types.TaskResult{Status: types.Pending}},
+		&types.ScheduledTask{Id: "test2", Command: "echo test", CronExpr: "0 0 * * *", Logger: ctx.Logger, LatestTaskResult: nil},
+	}
+	ref := time.Date(2023, time.January, 25, 15, 4, 0, 0, time.UTC)
+
+	ctx.Config.Scheduled = scheduledTasks
+	_ = Run(ctx, ref, []string{}, false, true, "")
+
+	assert.ElementsMatch(t, want, scheduledTasks)
+}
+
 func TestFormatTaskResult(t *testing.T) {
 
 	tests := []struct {
