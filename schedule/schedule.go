@@ -97,6 +97,11 @@ func Run(ctx *context.Context, ref time.Time, taskFilter []string, force bool, n
 			continue
 		}
 
+		if task.LatestTaskResult != nil && task.LatestTaskResult.Status != types.Pending {
+			task.LatestTaskResult = nil
+			task.Logger.Error(fmt.Sprintf("Latest result cheduled task %s flushed", task.Id))
+		}
+
 		mustRun, err := gron.IsDue(task.CronExpr, ref)
 		if err != nil {
 			task.Logger.Error(fmt.Sprintf("Scheduled task %s fail to check if must run", task.Id))
