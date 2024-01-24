@@ -330,7 +330,7 @@ func TestFormatTaskResult(t *testing.T) {
 				FinishAt: time.Date(1970, time.January, 1, 0, 35, 1, 0, time.UTC),
 			},
 			want: fmt.Sprintf(
-				"%s\nTask test finish with status 'succeed'\nStart at 1970-01-01T00:30:00, finish at 1970-01-01T00:35:01 (5m1s)\noutput:\nmy output\n\n%s\n",
+				"%s\nTask test finish with status 'succeed'\nStart at 1970-01-01T00:30:00 UTC, finish at 1970-01-01T00:35:01 UTC (5m1s)\noutput:\nmy output\n\n%s\n",
 				BlocSeparator,
 				BlocSeparator,
 			),
@@ -346,7 +346,7 @@ func TestFormatTaskResult(t *testing.T) {
 				FinishAt: time.Date(1970, time.January, 1, 0, 35, 1, 0, time.UTC),
 			},
 			want: fmt.Sprintf(
-				"%s\nTask test finish with status 'failed'\nStart at 1970-01-01T00:30:00, finish at 1970-01-01T00:35:01 (5m1s)\nDue to the following error: critical error\n%s\n",
+				"%s\nTask test finish with status 'failed'\nStart at 1970-01-01T00:30:00 UTC, finish at 1970-01-01T00:35:01 UTC (5m1s)\nDue to the following error: critical error\n%s\n",
 				BlocSeparator,
 				BlocSeparator,
 			),
@@ -362,7 +362,7 @@ func TestFormatTaskResult(t *testing.T) {
 				FinishAt: time.Date(1970, time.January, 1, 0, 35, 1, 0, time.UTC),
 			},
 			want: fmt.Sprintf(
-				"%s\nTask test finish with status 'failed'\nStart at 1970-01-01T00:30:00, finish at 1970-01-01T00:35:01 (5m1s)\noutput:\nmy output\nDue to the following error: critical error\n%s\n",
+				"%s\nTask test finish with status 'failed'\nStart at 1970-01-01T00:30:00 UTC, finish at 1970-01-01T00:35:01 UTC (5m1s)\noutput:\nmy output\nDue to the following error: critical error\n%s\n",
 				BlocSeparator,
 				BlocSeparator,
 			),
