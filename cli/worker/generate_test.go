@@ -52,3 +52,28 @@ func TestGetWorkerGenerateCmd_MissingArgs(t *testing.T) {
 	assert.NotEqual(t, err, nil)
 	assert.Equal(t, true, strings.Contains(err.Error(), "missing mandatory arguments"))
 }
+
+func TestFormatEnvVars(t *testing.T) {
+	tests := []struct {
+		name       string
+		argStrings []string
+		want       map[string]string
+	}{
+		{
+			name:       "Success",
+			want:       map[string]string{"key1": "value1", "key2": "value2"},
+			argStrings: []string{"key1=value1", "key2=value2"},
+		},
+		{
+			name:       "SuccessEmpty",
+			want:       map[string]string{},
+			argStrings: []string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FormatEnvVars(tt.argStrings)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

@@ -89,6 +89,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 		user       string
 		workingDir string
 		groupName  string
+		envVars    map[string]string
 	}
 	tests := []struct {
 		name string
@@ -102,6 +103,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 				user:       "foo",
 				groupName:  "bar",
 				workingDir: "/app/foo/",
+				envVars:    map[string]string{},
 			},
 			want: WorkerTasks{},
 		},
@@ -121,10 +123,27 @@ func TestPrepareWorkerTasks(t *testing.T) {
 				&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/"},
 			},
 		},
+		{
+			name: "SuccessExtraEnvVars",
+			args: args{
+				tasks: WorkerTasks{
+					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"VAR1": "foo", "VAR2": "bar"}},
+				},
+				user:       "foo",
+				groupName:  "bar",
+				workingDir: "/app/foo/",
+				envVars: map[string]string{
+					"VAR1": "bar",
+				},
+			},
+			want: WorkerTasks{
+				&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"VAR1": "bar", "VAR2": "bar"}},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PrepareWorkerTasks(tt.args.tasks, tt.args.groupName, tt.args.user, tt.args.workingDir)
+			PrepareWorkerTasks(tt.args.tasks, tt.args.groupName, tt.args.user, tt.args.workingDir, tt.args.envVars)
 			assert.Equal(t, tt.want, tt.args.tasks)
 		})
 	}

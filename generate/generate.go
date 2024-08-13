@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"dario.cat/mergo"
 	"errors"
 	"fmt"
 	"github.com/alexandreh2ag/go-task/assets"
@@ -10,7 +11,9 @@ import (
 	"github.com/spf13/afero"
 	"io"
 	"io/fs"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -91,10 +94,29 @@ func generateProgramList(workers types.WorkerTasks) string {
 
 func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskGroupNameKey, worker.GroupName))
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskDirKey, worker.Directory))
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskUserKey, worker.User))
-	envVars = append(envVars, fmt.Sprintf(`%s="%s"`, types.GtaskIDKey, worker.PrefixedName()))
+	taskVars := map[string]string{
+		types.GtaskGroupNameKey: worker.GroupName,
+		types.GtaskDirKey:       worker.Directory,
+		types.GtaskUserKey:      worker.User,
+		types.GtaskIDKey:        worker.PrefixedName(),
+	}
+	_ = mergo.Merge(&taskVars, worker.Envs)
+	processEnvVar := func(name string) string {
+		if value, found := taskVars[name]; found {
+			return value
+		}
+		return os.Getenv(name)
+	}
+
+	// ordering key to have deterministic results
+	keys := []string{}
+	for varName := range taskVars {
+		keys = append(keys, varName)
+	}
+	sort.Strings(keys)
+	for _, varName := range keys {
+		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(taskVars[varName], processEnvVar)))
+	}
 
 	return strings.Join(envVars, ",")
 }
