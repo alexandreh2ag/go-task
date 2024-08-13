@@ -9,6 +9,7 @@ import (
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
 	"github.com/spf13/afero"
+	"golang.org/x/exp/maps"
 	"io"
 	"io/fs"
 	"os"
@@ -100,6 +101,7 @@ func generateEnvVars(worker types.WorkerTask) string {
 		types.GtaskUserKey:      worker.User,
 		types.GtaskIDKey:        worker.PrefixedName(),
 	}
+
 	_ = mergo.Merge(&taskVars, worker.Envs)
 	processEnvVar := func(name string) string {
 		if value, found := taskVars[name]; found {
@@ -109,10 +111,7 @@ func generateEnvVars(worker types.WorkerTask) string {
 	}
 
 	// ordering key to have deterministic results
-	keys := []string{}
-	for varName := range taskVars {
-		keys = append(keys, varName)
-	}
+	keys := maps.Keys(taskVars)
 	sort.Strings(keys)
 	for _, varName := range keys {
 		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(taskVars[varName], processEnvVar)))

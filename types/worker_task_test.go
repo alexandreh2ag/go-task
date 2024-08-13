@@ -127,7 +127,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 			name: "SuccessExtraEnvVars",
 			args: args{
 				tasks: WorkerTasks{
-					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"VAR1": "foo", "VAR2": "bar"}},
+					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"var1": "foo", "VAR2": "bar"}},
 				},
 				user:       "foo",
 				groupName:  "bar",
