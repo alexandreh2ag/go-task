@@ -96,7 +96,6 @@ func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, workingDir
 		task.Logger = logger.With(log.TaskKey, task.Id)
 		task.Envs = env.ToUpperKeys(task.Envs)
 		_ = mergo.Merge(&task.Envs, envVars, mergo.WithOverride)
-		fmt.Println(task.Envs)
 		if task.Directory == "" {
 			task.Directory = workingDir
 		}
