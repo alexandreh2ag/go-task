@@ -1,6 +1,6 @@
 module github.com/alexandreh2ag/go-task
 
-go 1.21.0
+go 1.22.0
 
 require (
 	github.com/adhocore/gronx v1.6.5
