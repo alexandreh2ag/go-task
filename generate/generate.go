@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/alexandreh2ag/go-task/assets"
 	"github.com/alexandreh2ag/go-task/context"
+	"github.com/alexandreh2ag/go-task/env"
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
 	"github.com/spf13/afero"
@@ -103,20 +104,13 @@ func generateEnvVars(worker types.WorkerTask) string {
 	}
 
 	_ = mergo.Merge(&taskVars, worker.Envs)
-	processEnvVar := func(name string) string {
-		if value, found := taskVars[name]; found {
-			return value
-		}
-		return os.Getenv(name)
-	}
-
 	// ordering key to have deterministic results
 	keys := maps.Keys(taskVars)
 	sort.Strings(keys)
-	for _, varName := range keys {
-		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(taskVars[varName], processEnvVar)))
-	}
 
+	for _, varName := range keys {
+		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(taskVars[varName], env.GetEnvVars(taskVars))))
+	}
 	return strings.Join(envVars, ",")
 }
 

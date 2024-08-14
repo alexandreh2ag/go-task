@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"log/slog"
-	"os"
 	"os/exec"
 	"testing"
 	"time"
@@ -73,6 +72,7 @@ func TestPrepareScheduledTasks(t *testing.T) {
 		logger     *slog.Logger
 		user       string
 		workingDir string
+		envs       map[string]string
 	}
 	tests := []struct {
 		name string
@@ -86,6 +86,7 @@ func TestPrepareScheduledTasks(t *testing.T) {
 				logger:     logger,
 				user:       "foo",
 				workingDir: "/app/foo/",
+				envs:       map[string]string{},
 			},
 			want: ScheduledTasks{},
 		},
@@ -99,16 +100,17 @@ func TestPrepareScheduledTasks(t *testing.T) {
 				logger:     logger,
 				user:       "foo",
 				workingDir: "/app/foo/",
+				envs:       map[string]string{"foo": "bar"},
 			},
 			want: ScheduledTasks{
-				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test")},
-				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2")},
+				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test"), Envs: map[string]string{"foo": "bar"}},
+				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2"), Envs: map[string]string{"foo": "bar"}},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			PrepareScheduledTasks(tt.args.tasks, tt.args.logger, tt.args.workingDir)
+			PrepareScheduledTasks(tt.args.tasks, tt.args.logger, tt.args.workingDir, tt.args.envs)
 			assert.Equal(t, tt.want, tt.args.tasks)
 		})
 	}
@@ -277,40 +279,6 @@ func Test_splitCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, splitCommand(tt.command), "splitCommand(%v)", tt.command)
-		})
-	}
-}
-
-func Test_getEnvVars(t *testing.T) {
-	key := "GTASK_TESTING_GETENVVARS"
-	value := "foo"
-	_ = os.Setenv(key, value)
-	tests := []struct {
-		name      string
-		key       string
-		extraVars map[string]string
-		want      string
-	}{
-		{
-			name: "SuccessVarNotExist",
-			key:  key + "WRONG",
-			want: "",
-		},
-		{
-			name: "SuccessOSVar",
-			key:  key,
-			want: "foo",
-		},
-		{
-			name:      "SuccessGtaskVar",
-			key:       GtaskIDKey,
-			extraVars: map[string]string{GtaskIDKey: "bar"},
-			want:      "bar",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, getEnvVars(tt.extraVars)(tt.key), "getEnvVars(%v)", tt.extraVars)
 		})
 	}
 }

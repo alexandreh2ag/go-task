@@ -14,6 +14,7 @@ const (
 	ResultPath    = "result-path"
 	NoResultPrint = "no-result-print"
 	Force         = "force"
+	EnvVars       = "env"
 )
 
 func AddFlagWorkingDir(cmd *cobra.Command) {
@@ -81,5 +82,14 @@ func AddFlagForce(cmd *cobra.Command) {
 		Force,
 		false,
 		"Force will ignore cron expr on each task",
+	)
+}
+
+func AddFlagEnvVars(cmd *cobra.Command) {
+	cmd.Flags().StringToStringP(
+		EnvVars,
+		"e",
+		nil,
+		"Injected env vars. Format: -e KEY1=value1 -e KEY2=value2",
 	)
 }

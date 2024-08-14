@@ -23,6 +23,7 @@ func GetScheduleRunCmd(ctx *context.Context) *cobra.Command {
 	flags.AddFlagNoResultPrint(cmd)
 	flags.AddFlagResultPath(cmd)
 	flags.AddFlagForce(cmd)
+	flags.AddFlagEnvVars(cmd)
 
 	return cmd
 }
@@ -34,13 +35,14 @@ func GetScheduleRunRunFn(ctx *context.Context) func(*cobra.Command, []string) er
 		noResultPrint, _ := cmd.Flags().GetBool(flags.NoResultPrint)
 		resultPath, _ := cmd.Flags().GetString(flags.ResultPath)
 		force, _ := cmd.Flags().GetBool(flags.Force)
+		envVars, _ := cmd.Flags().GetStringToString(flags.EnvVars)
 
 		taskFilter := []string{}
 		if len(args) == 1 {
 			taskFilter = strings.Split(args[0], ",")
 		}
 
-		types.PrepareScheduledTasks(ctx.Config.Scheduled, ctx.Logger, workingDir)
+		types.PrepareScheduledTasks(ctx.Config.Scheduled, ctx.Logger, workingDir, envVars)
 		refTime, err := schedule.GetCurrentTime(ctx.Clock.Now(), timezone)
 		if err != nil {
 			return err

@@ -2,7 +2,9 @@ package types
 
 import (
 	"bytes"
+	"dario.cat/mergo"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/env"
 	"github.com/alexandreh2ag/go-task/log"
 	"log/slog"
 	"os"
@@ -20,10 +22,11 @@ const (
 type ScheduledTasks = []*ScheduledTask
 
 type ScheduledTask struct {
-	Id               string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
-	CronExpr         string `mapstructure:"expr" validate:"required,cron-expr"`
-	Command          string `mapstructure:"command" validate:"required"`
-	Directory        string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	Id               string            `mapstructure:"id" validate:"required,excludesall=!@#$ "`
+	CronExpr         string            `mapstructure:"expr" validate:"required,cron-expr"`
+	Command          string            `mapstructure:"command" validate:"required"`
+	Directory        string            `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	Envs             map[string]string `mapstructure:"environments"`
 	LatestTaskResult *TaskResult
 
 	Logger *slog.Logger
@@ -39,7 +42,9 @@ func (s *ScheduledTask) Execute() *TaskResult {
 		GtaskDirKey: s.Directory,
 	}
 
-	args := splitCommand(os.Expand(s.Command, getEnvVars(extraVars)))
+	_ = mergo.Merge(&extraVars, s.Envs)
+
+	args := splitCommand(os.Expand(s.Command, env.GetEnvVars(extraVars)))
 	if len(args) > 1 {
 		cmd = exec.Command(args[0], args[1:]...)
 	} else {
@@ -86,10 +91,12 @@ func (t *TaskResult) StatusString() string {
 	return "unknown"
 }
 
-func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, workingDir string) {
+func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, workingDir string, envVars map[string]string) {
 	for _, task := range tasks {
 		task.Logger = logger.With(log.TaskKey, task.Id)
-
+		task.Envs = env.ToUpperKeys(task.Envs)
+		_ = mergo.Merge(&task.Envs, envVars, mergo.WithOverride)
+		fmt.Println(task.Envs)
 		if task.Directory == "" {
 			task.Directory = workingDir
 		}
@@ -122,13 +129,4 @@ func splitCommand(command string) []string {
 		}
 	}
 	return result
-}
-
-func getEnvVars(extraVars map[string]string) func(string) string {
-	return func(key string) string {
-		if val, ok := extraVars[key]; ok {
-			return val
-		}
-		return os.Getenv(key)
-	}
 }

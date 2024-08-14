@@ -3,8 +3,7 @@ package types
 import (
 	"dario.cat/mergo"
 	"fmt"
-	"golang.org/x/exp/maps"
-	"strings"
+	"github.com/alexandreh2ag/go-task/env"
 )
 
 type WorkerTasks = []*WorkerTask
@@ -21,17 +20,7 @@ type WorkerTask struct {
 func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string, enVars map[string]string) {
 	for _, task := range tasks {
 		task.GroupName = groupName
-
-		// workaround with viper issue https://github.com/spf13/viper/issues/1014
-		keys := maps.Keys(task.Envs)
-		for _, key := range keys {
-			if key != strings.ToUpper(key) {
-				task.Envs[strings.ToUpper(key)] = task.Envs[key]
-				delete(task.Envs, key)
-			}
-
-		}
-
+		task.Envs = env.ToUpperKeys(task.Envs)
 		_ = mergo.Merge(&task.Envs, enVars, mergo.WithOverride)
 		if task.User == "" {
 			task.User = user
