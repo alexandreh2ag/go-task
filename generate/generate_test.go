@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"io"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -180,14 +182,14 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test-group-test\"\n\n" +
+		"environment = GTASK_DIR=\"/tmp/dir\",GTASK_GROUP_NAME=\"test-group\",GTASK_ID=\"test-group-test\",GTASK_USER=\"toto\"\n\n" +
 		"[program:test-group-test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_GROUP_NAME=\"test-group\",GTASK_DIR=\"/tmp/dir\",GTASK_USER=\"toto\",GTASK_ID=\"test-group-test2\"\n"
+		"environment = GTASK_DIR=\"/tmp/dir\",GTASK_GROUP_NAME=\"test-group\",GTASK_ID=\"test-group-test2\",GTASK_USER=\"toto\"\n"
 
 	ctx.Config.Workers = workers
 
@@ -304,6 +306,8 @@ func TestGenerate_NoErrorDeleteFile(t *testing.T) {
 func TestGenerateEnvVars(t *testing.T) {
 	groupName := "group"
 
+	_ = os.Setenv("MY_VAR", "FROM_OS_ENV")
+
 	worker := types.WorkerTask{
 		Id:        "test2",
 		Command:   "fake",
@@ -311,9 +315,70 @@ func TestGenerateEnvVars(t *testing.T) {
 		GroupName: groupName,
 		Directory: "/tmp/dir",
 	}
-	output := generateEnvVars(worker)
 
-	assert.Equal(t,
-		fmt.Sprintf("GTASK_GROUP_NAME=\"%s\",GTASK_DIR=\"%s\",GTASK_USER=\"%s\",GTASK_ID=\"%s\"", groupName, worker.Directory, worker.User, worker.PrefixedName()),
-		output)
+	tests := []struct {
+		name      string
+		groupName string
+		argsEnv   map[string]string
+		worker    types.WorkerTask
+		want      []string
+	}{
+		{
+			name:    "no extra env vars",
+			worker:  worker,
+			argsEnv: map[string]string{},
+			want: []string{
+				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
+				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
+				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
+				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
+			},
+		},
+		{
+			name:   "extra env vars",
+			worker: worker,
+			argsEnv: map[string]string{
+				"MY_EXTRA_VAR":     "VALUE",
+				"GTASK_GROUP_NAME": "not_overwritten",
+			},
+			want: []string{
+				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
+				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
+				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
+				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
+				fmt.Sprintf("MY_EXTRA_VAR=\"%s\"", "VALUE"),
+			},
+		},
+		{
+			name:   "expanded vars",
+			worker: worker,
+			argsEnv: map[string]string{
+				"MY_EXTRA_VAR_FROM_ENV":   "${MY_VAR}",
+				"MY_EXTRA_VAR_FROM_GTASK": "${GTASK_DIR}",
+			},
+			want: []string{
+				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
+				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
+				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
+				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
+				fmt.Sprintf("MY_EXTRA_VAR_FROM_ENV=\"%s\"", "FROM_OS_ENV"),
+				fmt.Sprintf("MY_EXTRA_VAR_FROM_GTASK=\"%s\"", worker.Directory),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			worker.Envs = tt.argsEnv
+			output := generateEnvVars(worker)
+			assert.ElementsMatch(t,
+				tt.want,
+				strings.Split(output, ","))
+			worker.Envs = nil
+		})
+	}
+
+	_ = os.Unsetenv("MY_VAR")
+
 }

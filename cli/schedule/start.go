@@ -27,6 +27,7 @@ func GetScheduleStartCmd(ctx *context.Context) *cobra.Command {
 	flags.AddFlagTimezone(cmd)
 	flags.AddFlagNoResultPrint(cmd)
 	flags.AddFlagResultPath(cmd)
+	flags.AddFlagEnvVars(cmd)
 	cmd.Flags().Duration(
 		Tick,
 		5*time.Minute,
@@ -44,6 +45,7 @@ func GetScheduleStartRunFn(ctx *context.Context) func(*cobra.Command, []string) 
 		noResultPrint, _ := cmd.Flags().GetBool(flags.NoResultPrint)
 		resultPath, _ := cmd.Flags().GetString(flags.ResultPath)
 		tick, _ := cmd.Flags().GetDuration(Tick)
+		envVars, _ := cmd.Flags().GetStringToString(flags.EnvVars)
 
 		taskFilter := []string{}
 		if len(args) == 1 {
@@ -58,7 +60,7 @@ func GetScheduleStartRunFn(ctx *context.Context) func(*cobra.Command, []string) 
 			return errors.New("tick duration must be only in minutes")
 		}
 
-		types.PrepareScheduledTasks(ctx.Config.Scheduled, ctx.Logger, workingDir)
+		types.PrepareScheduledTasks(ctx.Config.Scheduled, ctx.Logger, workingDir, envVars)
 
 		return schedule.Start(ctx, int(tick.Minutes()), timezone, taskFilter, noResultPrint, resultPath)
 	}

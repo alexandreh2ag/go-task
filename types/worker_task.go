@@ -1,6 +1,10 @@
 package types
 
-import "fmt"
+import (
+	"dario.cat/mergo"
+	"fmt"
+	"github.com/alexandreh2ag/go-task/env"
+)
 
 type WorkerTasks = []*WorkerTask
 
@@ -8,14 +12,16 @@ type WorkerTask struct {
 	Id        string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
 	Command   string `mapstructure:"command" validate:"required"`
 	GroupName string
-	User      string `mapstructure:"user" validate:"omitempty,required,alphanum"`
-	Directory string `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	User      string            `mapstructure:"user" validate:"omitempty,required,alphanum"`
+	Directory string            `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	Envs      map[string]string `mapstructure:"environments"`
 }
 
-func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string) {
+func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string, enVars map[string]string) {
 	for _, task := range tasks {
 		task.GroupName = groupName
-
+		task.Envs = env.ToUpperKeys(task.Envs)
+		_ = mergo.Merge(&task.Envs, enVars, mergo.WithOverride)
 		if task.User == "" {
 			task.User = user
 		}
@@ -23,6 +29,7 @@ func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string) {
 		if task.Directory == "" {
 			task.Directory = workingDir
 		}
+
 	}
 }
 

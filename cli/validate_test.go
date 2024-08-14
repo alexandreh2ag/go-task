@@ -26,6 +26,7 @@ func Test_GetValidateRunFn_Success(t *testing.T) {
 	)
 
 	viper.Set(Config, fmt.Sprintf("%s/tasks.yml", path))
+	_ = cmd.Execute()
 	err := GetValidateRunFn(ctx)(cmd, []string{})
 	assert.NoError(t, err)
 }
