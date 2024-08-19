@@ -25,6 +25,7 @@ type ScheduledTask struct {
 	Id               string            `mapstructure:"id" validate:"required,excludesall=!@#$ "`
 	CronExpr         string            `mapstructure:"expr" validate:"required,cron-expr"`
 	Command          string            `mapstructure:"command" validate:"required"`
+	Expression       string            `mapstructure:"if"`
 	Directory        string            `mapstructure:"directory" validate:"omitempty,required,dirpath"`
 	Envs             map[string]string `mapstructure:"environments"`
 	LatestTaskResult *TaskResult

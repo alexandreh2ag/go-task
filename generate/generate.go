@@ -1,10 +1,10 @@
 package generate
 
 import (
-	"dario.cat/mergo"
 	"errors"
 	"fmt"
 	"github.com/alexandreh2ag/go-task/assets"
+	"github.com/alexandreh2ag/go-task/condition"
 	"github.com/alexandreh2ag/go-task/context"
 	"github.com/alexandreh2ag/go-task/env"
 	"github.com/alexandreh2ag/go-task/types"
@@ -83,7 +83,21 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	if err != nil {
 		return err
 	}
-	return tmpl.Execute(writer, ctx.Config.Workers)
+	templatedWorkers := types.WorkerTasks{}
+
+	for _, worker := range ctx.Config.Workers {
+		result, err := condition.EvalExpression(worker.Expression, worker.Envs)
+		if err != nil {
+			return fmt.Errorf("can't evaluate expression for task '%s': %v", worker.Id, err)
+		}
+		if result {
+			templatedWorkers = append(templatedWorkers, worker)
+		} else {
+			ctx.Logger.Info(fmt.Sprintf("skipping task '%s': expression false", worker.Id))
+		}
+	}
+
+	return tmpl.Execute(writer, templatedWorkers)
 }
 
 func generateProgramList(workers types.WorkerTasks) string {
@@ -96,20 +110,13 @@ func generateProgramList(workers types.WorkerTasks) string {
 
 func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
-	taskVars := map[string]string{
-		types.GtaskGroupNameKey: worker.GroupName,
-		types.GtaskDirKey:       worker.Directory,
-		types.GtaskUserKey:      worker.User,
-		types.GtaskIDKey:        worker.PrefixedName(),
-	}
 
-	_ = mergo.Merge(&taskVars, worker.Envs)
 	// ordering key to have deterministic results
-	keys := maps.Keys(taskVars)
+	keys := maps.Keys(worker.Envs)
 	sort.Strings(keys)
 
 	for _, varName := range keys {
-		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(taskVars[varName], env.GetEnvVars(taskVars))))
+		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(worker.Envs[varName], env.GetEnvVars(worker.Envs))))
 	}
 	return strings.Join(envVars, ",")
 }

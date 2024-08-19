@@ -75,3 +75,44 @@ func Test_ToUpperKeys(t *testing.T) {
 	}
 
 }
+
+func Test_EvalAll(t *testing.T) {
+
+	_ = os.Setenv("OS_VAR", "FROM_OS")
+	tests := []struct {
+		name string
+		args map[string]string
+		want map[string]string
+	}{
+		{
+			name: "NoChange",
+			args: map[string]string{
+				"KEY1": "foo",
+				"KEY2": "bar",
+			},
+			want: map[string]string{
+				"KEY1": "foo",
+				"KEY2": "bar",
+			},
+		},
+		{
+			name: "WithChange",
+			args: map[string]string{
+				"KEY1": "${OS_VAR}",
+				"KEY2": "${KEY3}",
+				"KEY3": "FOO",
+			},
+			want: map[string]string{
+				"KEY1": "FROM_OS",
+				"KEY2": "FOO",
+				"KEY3": "FOO",
+			},
+		},
+	}
+	for _, tt := range tests {
+		got := EvalAll(tt.args)
+		assert.Equal(t, tt.want, got)
+	}
+	_ = os.Unsetenv("OS_VAR")
+
+}

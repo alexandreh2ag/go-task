@@ -8,10 +8,12 @@ import (
 
 func GetEnvVars(extraVars map[string]string) func(string) string {
 	return func(key string) string {
-		if val, ok := extraVars[key]; ok {
-			return val
+
+		val, ok := extraVars[key]
+		if !ok {
+			val = os.Getenv(key)
 		}
-		return os.Getenv(key)
+		return os.ExpandEnv(val)
 	}
 }
 
@@ -25,4 +27,12 @@ func ToUpperKeys(envs map[string]string) map[string]string {
 		}
 	}
 	return envs
+}
+
+func EvalAll(envs map[string]string) map[string]string {
+	evaluatedEnvs := map[string]string{}
+	for key, value := range envs {
+		evaluatedEnvs[key] = os.Expand(value, GetEnvVars(envs))
+	}
+	return evaluatedEnvs
 }
