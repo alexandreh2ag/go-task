@@ -119,8 +119,32 @@ func TestPrepareWorkerTasks(t *testing.T) {
 				workingDir: "/app/foo/",
 			},
 			want: WorkerTasks{
-				&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "foo", Directory: "/app/foo/"},
-				&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/"},
+				&WorkerTask{
+					Id:        "test",
+					Command:   "cmd",
+					GroupName: "bar",
+					User:      "foo",
+					Directory: "/app/foo/",
+					Envs: map[string]string{
+						"GTASK_DIR":        "/app/foo/",
+						"GTASK_GROUP_NAME": "bar",
+						"GTASK_ID":         "bar-test",
+						"GTASK_USER":       "foo",
+					},
+				},
+				&WorkerTask{
+					Id:        "test2",
+					Command:   "cmd",
+					GroupName: "bar",
+					User:      "bar",
+					Directory: "/app/bar/",
+					Envs: map[string]string{
+						"GTASK_DIR":        "/app/bar/",
+						"GTASK_GROUP_NAME": "bar",
+						"GTASK_ID":         "bar-test2",
+						"GTASK_USER":       "bar",
+					},
+				},
 			},
 		},
 		{
@@ -137,7 +161,20 @@ func TestPrepareWorkerTasks(t *testing.T) {
 				},
 			},
 			want: WorkerTasks{
-				&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"VAR1": "bar", "VAR2": "bar"}},
+				&WorkerTask{
+					Id:        "test",
+					Command:   "cmd",
+					GroupName: "bar",
+					User:      "bar",
+					Directory: "/app/bar/",
+					Envs: map[string]string{
+						"VAR1": "bar", "VAR2": "bar",
+						"GTASK_DIR":        "/app/bar/",
+						"GTASK_GROUP_NAME": "bar",
+						"GTASK_ID":         "bar-test",
+						"GTASK_USER":       "bar",
+					},
+				},
 			},
 		},
 	}

@@ -9,12 +9,13 @@ import (
 type WorkerTasks = []*WorkerTask
 
 type WorkerTask struct {
-	Id        string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
-	Command   string `mapstructure:"command" validate:"required"`
-	GroupName string
-	User      string            `mapstructure:"user" validate:"omitempty,required,alphanum"`
-	Directory string            `mapstructure:"directory" validate:"omitempty,required,dirpath"`
-	Envs      map[string]string `mapstructure:"environments"`
+	Id         string `mapstructure:"id" validate:"required,excludesall=!@#$ "`
+	Command    string `mapstructure:"command" validate:"required"`
+	GroupName  string
+	Expression string            `mapstructure:"if"`
+	User       string            `mapstructure:"user" validate:"omitempty,required,alphanum"`
+	Directory  string            `mapstructure:"directory" validate:"omitempty,required,dirpath"`
+	Envs       map[string]string `mapstructure:"environments"`
 }
 
 func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string, enVars map[string]string) {
@@ -29,8 +30,17 @@ func PrepareWorkerTasks(tasks WorkerTasks, groupName, user, workingDir string, e
 		if task.Directory == "" {
 			task.Directory = workingDir
 		}
+		taskVars := map[string]string{
+			GtaskGroupNameKey: task.GroupName,
+			GtaskDirKey:       task.Directory,
+			GtaskUserKey:      task.User,
+			GtaskIDKey:        task.PrefixedName(),
+		}
+		_ = mergo.Merge(&task.Envs, taskVars, mergo.WithOverride)
 
+		task.Envs = env.EvalAll(task.Envs)
 	}
+
 }
 
 func (w *WorkerTask) PrefixedName() string {

@@ -3,7 +3,6 @@ package generate
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/alexandreh2ag/go-task/context"
 	mockOs "github.com/alexandreh2ag/go-task/mocks/os"
 	mockAfero "github.com/alexandreh2ag/go-task/mocks/spf13"
@@ -13,7 +12,6 @@ import (
 	"go.uber.org/mock/gomock"
 	"io"
 	"os"
-	"strings"
 	"testing"
 )
 
@@ -164,6 +162,9 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 			GroupName: groupName,
 			User:      "toto",
 			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"FOO": "BAR",
+			},
 		},
 		{
 			Id:        "test2",
@@ -171,6 +172,21 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 			GroupName: groupName,
 			User:      "toto",
 			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"BAR": "FOO",
+			},
+			Expression: "BAR == FOO",
+		},
+		{
+			Id:        "test3",
+			Command:   "fake",
+			GroupName: groupName,
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"BAR": "NOT_FOO",
+			},
+			Expression: "BAR == FOO",
 		},
 	}
 
@@ -182,14 +198,14 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_DIR=\"/tmp/dir\",GTASK_GROUP_NAME=\"test-group\",GTASK_ID=\"test-group-test\",GTASK_USER=\"toto\"\n\n" +
+		"environment = FOO=\"BAR\"\n\n" +
 		"[program:test-group-test2]\n" +
 		"directory = /tmp/dir\n" +
 		"autorestart = true\n" +
 		"autostart = true\n" +
 		"user = toto\n" +
 		"command = fake\n" +
-		"environment = GTASK_DIR=\"/tmp/dir\",GTASK_GROUP_NAME=\"test-group\",GTASK_ID=\"test-group-test2\",GTASK_USER=\"toto\"\n"
+		"environment = BAR=\"FOO\"\n"
 
 	ctx.Config.Workers = workers
 
@@ -199,6 +215,32 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	assert.Equal(t, err, nil)
 
 	assert.Equal(t, expectedOutput, buffer.String())
+}
+
+func TestTemplateSupervisorFile_Eval_Fail(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	groupName := "test-group"
+	workers := types.WorkerTasks{
+		{
+			Id:        "test",
+			Command:   "fake",
+			GroupName: groupName,
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"FOO": "BAR",
+			},
+			Expression: "BAR & FOO",
+		},
+	}
+
+	ctx.Config.Workers = workers
+
+	buffer := bytes.NewBufferString("")
+
+	err := templateSupervisorFile(ctx, buffer, groupName)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "can't evaluate expression for task 'test'")
 }
 
 func TestGenerateProgramList(t *testing.T) {
@@ -306,8 +348,6 @@ func TestGenerate_NoErrorDeleteFile(t *testing.T) {
 func TestGenerateEnvVars(t *testing.T) {
 	groupName := "group"
 
-	_ = os.Setenv("MY_VAR", "FROM_OS_ENV")
-
 	worker := types.WorkerTask{
 		Id:        "test2",
 		Command:   "fake",
@@ -321,49 +361,16 @@ func TestGenerateEnvVars(t *testing.T) {
 		groupName string
 		argsEnv   map[string]string
 		worker    types.WorkerTask
-		want      []string
+		want      string
 	}{
-		{
-			name:    "no extra env vars",
-			worker:  worker,
-			argsEnv: map[string]string{},
-			want: []string{
-				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
-				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
-				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
-				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
-			},
-		},
-		{
-			name:   "extra env vars",
-			worker: worker,
-			argsEnv: map[string]string{
-				"MY_EXTRA_VAR":     "VALUE",
-				"GTASK_GROUP_NAME": "not_overwritten",
-			},
-			want: []string{
-				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
-				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
-				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
-				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
-				fmt.Sprintf("MY_EXTRA_VAR=\"%s\"", "VALUE"),
-			},
-		},
 		{
 			name:   "expanded vars",
 			worker: worker,
 			argsEnv: map[string]string{
-				"MY_EXTRA_VAR_FROM_ENV":   "${MY_VAR}",
-				"MY_EXTRA_VAR_FROM_GTASK": "${GTASK_DIR}",
+				"B_SECOND": "foo",
+				"A_FIRST":  "bar",
 			},
-			want: []string{
-				fmt.Sprintf("GTASK_GROUP_NAME=\"%s\"", groupName),
-				fmt.Sprintf("GTASK_DIR=\"%s\"", worker.Directory),
-				fmt.Sprintf("GTASK_USER=\"%s\"", worker.User),
-				fmt.Sprintf("GTASK_ID=\"%s\"", worker.PrefixedName()),
-				fmt.Sprintf("MY_EXTRA_VAR_FROM_ENV=\"%s\"", "FROM_OS_ENV"),
-				fmt.Sprintf("MY_EXTRA_VAR_FROM_GTASK=\"%s\"", worker.Directory),
-			},
+			want: "A_FIRST=\"bar\",B_SECOND=\"foo\"",
 		},
 	}
 
@@ -372,9 +379,7 @@ func TestGenerateEnvVars(t *testing.T) {
 
 			worker.Envs = tt.argsEnv
 			output := generateEnvVars(worker)
-			assert.ElementsMatch(t,
-				tt.want,
-				strings.Split(output, ","))
+			assert.Equal(t, output, tt.want)
 			worker.Envs = nil
 		})
 	}
