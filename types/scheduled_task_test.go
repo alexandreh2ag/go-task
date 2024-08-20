@@ -71,6 +71,7 @@ func TestPrepareScheduledTasks(t *testing.T) {
 		tasks      ScheduledTasks
 		logger     *slog.Logger
 		user       string
+		id         string
 		workingDir string
 		envs       map[string]string
 	}
@@ -86,7 +87,6 @@ func TestPrepareScheduledTasks(t *testing.T) {
 				logger:     logger,
 				user:       "foo",
 				workingDir: "/app/foo/",
-				envs:       map[string]string{},
 			},
 			want: ScheduledTasks{},
 		},
@@ -103,8 +103,8 @@ func TestPrepareScheduledTasks(t *testing.T) {
 				envs:       map[string]string{"foo": "bar"},
 			},
 			want: ScheduledTasks{
-				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test"), Envs: map[string]string{"foo": "bar"}},
-				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2"), Envs: map[string]string{"foo": "bar"}},
+				&ScheduledTask{Id: "test", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/foo/", Logger: logger.With(log.TaskKey, "test"), Envs: map[string]string{GtaskIDKey: "test", GtaskDirKey: "/app/foo/", "foo": "bar"}},
+				&ScheduledTask{Id: "test2", Command: "cmd", CronExpr: "* * * * *", Directory: "/app/bar/", Logger: logger.With(log.TaskKey, "test2"), Envs: map[string]string{GtaskIDKey: "test2", GtaskDirKey: "/app/bar/", "foo": "bar"}},
 			},
 		},
 	}
@@ -139,6 +139,11 @@ func TestTaskResult_StatusString(t1 *testing.T) {
 			want:   "failed",
 		},
 		{
+			name:   "SkippedWithSkipped",
+			Status: Skipped,
+			want:   "skipped",
+		},
+		{
 			name:   "SuccessWithUnknown",
 			Status: -1,
 			want:   "unknown",
@@ -157,8 +162,10 @@ func TestTaskResult_StatusString(t1 *testing.T) {
 func TestScheduledTask_Execute(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	type fields struct {
-		Command string
-		Logger  *slog.Logger
+		Command    string
+		Logger     *slog.Logger
+		Expression string
+		Envs       map[string]string
 	}
 	tests := []struct {
 		name   string
@@ -174,6 +181,23 @@ func TestScheduledTask_Execute(t *testing.T) {
 			want: &TaskResult{
 				Status:   Succeed,
 				Output:   *bytes.NewBuffer([]byte("\n")),
+				StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+				FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		{
+			name: "SuccessSkipped",
+			fields: fields{
+				Command: "echo",
+				Logger:  logger,
+				Envs: map[string]string{
+					"MY_VAR": "5",
+				},
+				Expression: "MY_VAR != 5",
+			},
+			want: &TaskResult{
+				Status:   Skipped,
+				Output:   *bytes.NewBuffer(nil),
 				StartAt:  time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 				FinishAt: time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 			},
@@ -209,8 +233,10 @@ func TestScheduledTask_Execute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &ScheduledTask{
-				Command: tt.fields.Command,
-				Logger:  tt.fields.Logger,
+				Command:    tt.fields.Command,
+				Logger:     tt.fields.Logger,
+				Expression: tt.fields.Expression,
+				Envs:       tt.fields.Envs,
 			}
 			tt.want.Task = s
 			res := s.Execute()
@@ -221,6 +247,27 @@ func TestScheduledTask_Execute(t *testing.T) {
 			assert.Equalf(t, tt.want, res, "Execute()")
 		})
 	}
+}
+
+func TestScheduledTask_Execute_Eval_Fail(t *testing.T) {
+	s := &ScheduledTask{
+		Command: "echo",
+		Logger:  slog.New(slog.NewTextHandler(io.Discard, nil)),
+		Envs: map[string]string{
+			"MY_VAR": "5",
+		},
+		Expression: "MY_VAR $= 5",
+		Id:         "my_task",
+	}
+
+	res := s.Execute()
+	assert.WithinDuration(t, s.LatestTaskResult.StartAt, s.LatestTaskResult.FinishAt, time.Second)
+	assert.NotNil(t, s.LatestTaskResult.Task)
+	s.LatestTaskResult.StartAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	s.LatestTaskResult.FinishAt = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	assert.NotNil(t, res.Error)
+	assert.Equal(t, res.Status, Failed)
+	assert.Contains(t, res.Error.Error(), "failed to evaluate expression for my_task")
 }
 
 func Test_splitCommand(t *testing.T) {

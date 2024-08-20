@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"dario.cat/mergo"
 	"fmt"
+	"github.com/alexandreh2ag/go-task/condition"
 	"github.com/alexandreh2ag/go-task/env"
 	"github.com/alexandreh2ag/go-task/log"
 	"log/slog"
@@ -17,6 +18,7 @@ const (
 	Pending int = iota
 	Succeed
 	Failed
+	Skipped
 )
 
 type ScheduledTasks = []*ScheduledTask
@@ -38,14 +40,23 @@ func (s *ScheduledTask) Execute() *TaskResult {
 	result := &TaskResult{Status: Pending, Task: s}
 	s.LatestTaskResult = result
 
-	extraVars := map[string]string{
-		GtaskIDKey:  s.Id,
-		GtaskDirKey: s.Directory,
+	resultEval, err := condition.EvalExpression(s.Expression, s.Envs)
+	if err != nil {
+		result.Status = Failed
+		result.StartAt = time.Now()
+		result.FinishAt = time.Now()
+		result.Error = fmt.Errorf("failed to evaluate expression for %s: %v", s.Id, err)
+		return result
+	}
+	if !resultEval {
+		result.Status = Skipped
+		result.StartAt = time.Now()
+		result.FinishAt = time.Now()
+		s.Logger.Debug(fmt.Sprintf("skipping scheduled task %s", s.Id))
+		return result
 	}
 
-	_ = mergo.Merge(&extraVars, s.Envs)
-
-	args := splitCommand(os.Expand(s.Command, env.GetEnvVars(extraVars)))
+	args := splitCommand(os.Expand(s.Command, env.GetEnvVars(s.Envs)))
 	if len(args) > 1 {
 		cmd = exec.Command(args[0], args[1:]...)
 	} else {
@@ -88,6 +99,8 @@ func (t *TaskResult) StatusString() string {
 		return "succeed"
 	case Failed:
 		return "failed"
+	case Skipped:
+		return "skipped"
 	}
 	return "unknown"
 }
@@ -97,9 +110,12 @@ func PrepareScheduledTasks(tasks ScheduledTasks, logger *slog.Logger, workingDir
 		task.Logger = logger.With(log.TaskKey, task.Id)
 		task.Envs = env.ToUpperKeys(task.Envs)
 		_ = mergo.Merge(&task.Envs, envVars, mergo.WithOverride)
+
 		if task.Directory == "" {
 			task.Directory = workingDir
 		}
+		task.Envs[GtaskIDKey] = task.Id
+		task.Envs[GtaskDirKey] = task.Directory
 	}
 }
 
