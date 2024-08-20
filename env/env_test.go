@@ -116,3 +116,10 @@ func Test_EvalAll(t *testing.T) {
 	_ = os.Unsetenv("OS_VAR")
 
 }
+
+func Test_GetEnvs(t *testing.T) {
+	_ = os.Setenv("TEST_VAR", "NEED_ME")
+	envVars := GetEnvs()
+	assert.Equal(t, envVars["TEST_VAR"], "NEED_ME")
+	_ = os.Unsetenv("TEST_VAR")
+}

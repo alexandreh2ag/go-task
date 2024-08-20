@@ -36,3 +36,15 @@ func EvalAll(envs map[string]string) map[string]string {
 	}
 	return evaluatedEnvs
 }
+
+func GetEnvs() map[string]string {
+	envHasMap := map[string]string{}
+
+	for _, env := range os.Environ() {
+		splittedString := strings.SplitN(env, "=", 2)
+		key := splittedString[0]
+		value := splittedString[1]
+		envHasMap[key] = value
+	}
+	return envHasMap
+}
