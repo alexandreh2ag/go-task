@@ -40,7 +40,9 @@ func (s *ScheduledTask) Execute() *TaskResult {
 	result := &TaskResult{Status: Pending, Task: s}
 	s.LatestTaskResult = result
 
-	resultEval, err := condition.EvalExpression(s.Expression, s.Envs)
+	contextEnv := env.GetEnvs()
+	_ = mergo.Merge(&contextEnv, s.Envs, mergo.WithOverride)
+	resultEval, err := condition.EvalExpression(s.Expression, contextEnv)
 	if err != nil {
 		result.Status = Failed
 		result.StartAt = time.Now()
