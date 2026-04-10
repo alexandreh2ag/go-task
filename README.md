@@ -91,6 +91,23 @@ command = echo 'task 2'
 environment = ...
 ```
 
+#### Multiple instances
+
+Use the `instances` field to run multiple copies of a worker. Each instance gets a unique name with a `_N` suffix. When `instances` is `1` (default), no suffix is added.
+
+```yaml
+workers:
+  - id: "task1"
+    command: "echo 'task 1'"
+    instances: 3
+```
+
+This will generate 3 programs: `my-group-task1_1`, `my-group-task1_2`, `my-group-task1_3`.
+
+Each instance exposes two environment variables:
+* `GTASK_ID`: the parent worker ID (`my-group-task1`)
+* `GTASK_INSTANCE_ID`: the unique instance ID (`my-group-task1_1`, `my-group-task1_2`, etc.)
+
 ### schedule
 
 #### Run

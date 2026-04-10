@@ -217,6 +217,67 @@ func TestTemplateSupervisorFile_OK(t *testing.T) {
 	assert.Equal(t, expectedOutput, buffer.String())
 }
 
+func TestTemplateSupervisorFile_WithInstances(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	groupName := "test-group"
+	workers := types.WorkerTasks{
+		{
+			Id:        "test_1",
+			Command:   "fake",
+			GroupName: groupName,
+			ParentId:  "test",
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"FOO": "BAR",
+			},
+			Template: types.WorkerTaskTemplate{
+				ExtraParams: map[string]map[string]string{},
+			},
+		},
+		{
+			Id:        "test_2",
+			Command:   "fake",
+			GroupName: groupName,
+			ParentId:  "test",
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"FOO": "BAR",
+			},
+			Template: types.WorkerTaskTemplate{
+				ExtraParams: map[string]map[string]string{},
+			},
+		},
+	}
+
+	expectedOutput := "[group:test-group]\n" +
+		"programs=test-group-test_1,test-group-test_2\n\n\n" +
+		"[program:test-group-test_1]\n" +
+		"directory = /tmp/dir\n" +
+		"autorestart = true\n" +
+		"autostart = true\n" +
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = FOO=\"BAR\"\n\n" +
+		"[program:test-group-test_2]\n" +
+		"directory = /tmp/dir\n" +
+		"autorestart = true\n" +
+		"autostart = true\n" +
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = FOO=\"BAR\"\n"
+
+	ctx.Config.Workers = workers
+
+	buffer := bytes.NewBufferString("")
+
+	err := templateSupervisorFile(ctx, buffer, groupName)
+	assert.Equal(t, err, nil)
+
+	assert.Equal(t, expectedOutput, buffer.String())
+}
+
 func TestTemplateSupervisorFile_Eval_Fail(t *testing.T) {
 	ctx := context.TestContext(io.Discard)
 	groupName := "test-group"
