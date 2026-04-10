@@ -57,6 +57,7 @@ func GetWorkerGenerateRunFn(ctx *context.Context) func(*cobra.Command, []string)
 		if groupName == "" || outputPath == "" {
 			return fmt.Errorf("missing mandatory arguments (--%s, --%s)", OutputPath, flags.GroupName)
 		}
+		ctx.Config.Workers = types.ExpandWorkerTasks(ctx.Config.Workers)
 		types.PrepareWorkerTasks(ctx.Config.Workers, groupName, user, workingDir, envVars)
 		ctx.Logger.Info(fmt.Sprintf("Generate format type %s", generate.FormatSupervisor))
 

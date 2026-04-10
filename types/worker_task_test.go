@@ -111,8 +111,8 @@ func TestPrepareWorkerTasks(t *testing.T) {
 			name: "SuccessMultipleTasks",
 			args: args{
 				tasks: WorkerTasks{
-					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar"},
-					&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/"},
+					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ParentId: "test"},
+					&WorkerTask{Id: "test2", Command: "cmd", GroupName: "bar", ParentId: "test2", User: "bar", Directory: "/app/bar/"},
 				},
 				user:       "foo",
 				groupName:  "bar",
@@ -123,13 +123,15 @@ func TestPrepareWorkerTasks(t *testing.T) {
 					Id:        "test",
 					Command:   "cmd",
 					GroupName: "bar",
+					ParentId:  "test",
 					User:      "foo",
 					Directory: "/app/foo/",
 					Envs: map[string]string{
-						"GTASK_DIR":        "/app/foo/",
-						"GTASK_GROUP_NAME": "bar",
-						"GTASK_ID":         "bar-test",
-						"GTASK_USER":       "foo",
+						"GTASK_DIR":         "/app/foo/",
+						"GTASK_GROUP_NAME":  "bar",
+						"GTASK_ID":          "bar-test",
+						"GTASK_INSTANCE_ID": "bar-test",
+						"GTASK_USER":        "foo",
 					},
 					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
@@ -137,13 +139,15 @@ func TestPrepareWorkerTasks(t *testing.T) {
 					Id:        "test2",
 					Command:   "cmd",
 					GroupName: "bar",
+					ParentId:  "test2",
 					User:      "bar",
 					Directory: "/app/bar/",
 					Envs: map[string]string{
-						"GTASK_DIR":        "/app/bar/",
-						"GTASK_GROUP_NAME": "bar",
-						"GTASK_ID":         "bar-test2",
-						"GTASK_USER":       "bar",
+						"GTASK_DIR":         "/app/bar/",
+						"GTASK_GROUP_NAME":  "bar",
+						"GTASK_ID":          "bar-test2",
+						"GTASK_INSTANCE_ID": "bar-test2",
+						"GTASK_USER":        "bar",
 					},
 					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
@@ -153,7 +157,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 			name: "SuccessExtraEnvVars",
 			args: args{
 				tasks: WorkerTasks{
-					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"var1": "foo", "VAR2": "bar"}},
+					&WorkerTask{Id: "test", Command: "cmd", GroupName: "bar", ParentId: "test", User: "bar", Directory: "/app/bar/", Envs: map[string]string{"var1": "foo", "VAR2": "bar"}},
 				},
 				user:       "foo",
 				groupName:  "bar",
@@ -167,14 +171,47 @@ func TestPrepareWorkerTasks(t *testing.T) {
 					Id:        "test",
 					Command:   "cmd",
 					GroupName: "bar",
+					ParentId:  "test",
 					User:      "bar",
 					Directory: "/app/bar/",
 					Envs: map[string]string{
 						"VAR1": "bar", "VAR2": "bar",
-						"GTASK_DIR":        "/app/bar/",
-						"GTASK_GROUP_NAME": "bar",
-						"GTASK_ID":         "bar-test",
-						"GTASK_USER":       "bar",
+						"GTASK_DIR":         "/app/bar/",
+						"GTASK_GROUP_NAME":  "bar",
+						"GTASK_ID":          "bar-test",
+						"GTASK_INSTANCE_ID": "bar-test",
+						"GTASK_USER":        "bar",
+					},
+					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
+				},
+			},
+		},
+		{
+			name: "SuccessExpandedWorker",
+			args: args{
+				tasks: WorkerTasks{
+					&WorkerTask{Id: "worker_1", Command: "cmd", ParentId: "worker", Instances: 1},
+				},
+				user:       "foo",
+				groupName:  "bar",
+				workingDir: "/app/foo/",
+				envVars:    map[string]string{},
+			},
+			want: WorkerTasks{
+				&WorkerTask{
+					Id:        "worker_1",
+					Command:   "cmd",
+					GroupName: "bar",
+					ParentId:  "worker",
+					Instances: 1,
+					User:      "foo",
+					Directory: "/app/foo/",
+					Envs: map[string]string{
+						"GTASK_DIR":         "/app/foo/",
+						"GTASK_GROUP_NAME":  "bar",
+						"GTASK_ID":          "bar-worker",
+						"GTASK_INSTANCE_ID": "bar-worker_1",
+						"GTASK_USER":        "foo",
 					},
 					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
@@ -189,6 +226,76 @@ func TestPrepareWorkerTasks(t *testing.T) {
 	}
 }
 
+func TestExpandWorkerTasks(t *testing.T) {
+	tests := []struct {
+		name  string
+		tasks WorkerTasks
+		want  WorkerTasks
+	}{
+		{
+			name:  "EmptyTasks",
+			tasks: WorkerTasks{},
+			want:  WorkerTasks{},
+		},
+		{
+			name: "SingleInstanceNoExpand",
+			tasks: WorkerTasks{
+				{Id: "worker", Command: "cmd", Instances: 1},
+			},
+			want: WorkerTasks{
+				{Id: "worker", Command: "cmd", Instances: 1, ParentId: "worker"},
+			},
+		},
+		{
+			name: "ZeroInstancesNoExpand",
+			tasks: WorkerTasks{
+				{Id: "worker", Command: "cmd", Instances: 0},
+			},
+			want: WorkerTasks{
+				{Id: "worker", Command: "cmd", Instances: 0, ParentId: "worker"},
+			},
+		},
+		{
+			name: "MultipleInstances",
+			tasks: WorkerTasks{
+				{Id: "worker", Command: "cmd", Instances: 3, Envs: map[string]string{"FOO": "BAR"}},
+			},
+			want: WorkerTasks{
+				{Id: "worker_1", Command: "cmd", Instances: 1, ParentId: "worker", Envs: map[string]string{"FOO": "BAR"}},
+				{Id: "worker_2", Command: "cmd", Instances: 1, ParentId: "worker", Envs: map[string]string{"FOO": "BAR"}},
+				{Id: "worker_3", Command: "cmd", Instances: 1, ParentId: "worker", Envs: map[string]string{"FOO": "BAR"}},
+			},
+		},
+		{
+			name: "MixedInstances",
+			tasks: WorkerTasks{
+				{Id: "single", Command: "cmd", Instances: 1},
+				{Id: "multi", Command: "cmd", Instances: 2},
+			},
+			want: WorkerTasks{
+				{Id: "single", Command: "cmd", Instances: 1, ParentId: "single"},
+				{Id: "multi_1", Command: "cmd", Instances: 1, ParentId: "multi"},
+				{Id: "multi_2", Command: "cmd", Instances: 1, ParentId: "multi"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ExpandWorkerTasks(tt.tasks)
+			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
+func TestExpandWorkerTasks_EnvIsolation(t *testing.T) {
+	tasks := WorkerTasks{
+		{Id: "worker", Command: "cmd", Instances: 2, Envs: map[string]string{"FOO": "BAR"}},
+	}
+	result := ExpandWorkerTasks(tasks)
+	result[0].Envs["FOO"] = "CHANGED"
+	assert.Equal(t, "BAR", result[1].Envs["FOO"])
+}
+
 func TestPrefixedName(t *testing.T) {
 	prefix := "group"
 	worker := WorkerTask{
@@ -198,4 +305,15 @@ func TestPrefixedName(t *testing.T) {
 	}
 
 	assert.Equal(t, worker.PrefixedName(), prefix+"-"+worker.Id)
+}
+
+func TestPrefixedParentName(t *testing.T) {
+	worker := WorkerTask{
+		Id:        "test_1",
+		Command:   "fake",
+		GroupName: "group",
+		ParentId:  "test",
+	}
+
+	assert.Equal(t, "group-test", worker.PrefixedParentName())
 }
