@@ -72,11 +72,12 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	}
 
 	extraVars := template.FuncMap{
-		"now":       time.Now,
-		"version":   version.GetFormattedVersion,
-		"groupName": func() string { return groupName },
-		"programs":  generateProgramList,
-		"envs":      generateEnvVars,
+		"now":         time.Now,
+		"version":     version.GetFormattedVersion,
+		"groupName":   func() string { return groupName },
+		"programs":    generateProgramList,
+		"envs":        generateEnvVars,
+		"extraParams": extraParams,
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
@@ -119,6 +120,13 @@ func generateEnvVars(worker types.WorkerTask) string {
 		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(worker.Envs[varName], env.GetEnvVars(worker.Envs))))
 	}
 	return strings.Join(envVars, ",")
+}
+
+func extraParams(params map[string]map[string]string, section string) map[string]string {
+	if params == nil {
+		return nil
+	}
+	return params[section]
 }
 
 func deleteFile(ctx *context.Context, path string) error {

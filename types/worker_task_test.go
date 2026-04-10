@@ -131,6 +131,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 						"GTASK_ID":         "bar-test",
 						"GTASK_USER":       "foo",
 					},
+					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
 				&WorkerTask{
 					Id:        "test2",
@@ -144,6 +145,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 						"GTASK_ID":         "bar-test2",
 						"GTASK_USER":       "bar",
 					},
+					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
 			},
 		},
@@ -174,6 +176,7 @@ func TestPrepareWorkerTasks(t *testing.T) {
 						"GTASK_ID":         "bar-test",
 						"GTASK_USER":       "bar",
 					},
+					Template: WorkerTaskTemplate{ExtraParams: map[string]map[string]string{}},
 				},
 			},
 		},

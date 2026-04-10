@@ -52,6 +52,45 @@ CLI options:
 gtask worker generate --config gtask.yml --group-name my-group --format supervisor --output dest/path.conf
 ```
 
+#### Extra params for supervisord
+
+You can pass additional supervisord directives per worker using `template.extra_params`. These are injected into the `[program:xxx]` section of the generated config.
+
+```yaml
+workers:
+  - id: "task1"
+    command: "echo 'task 1'"
+    template:
+      extra_params:
+        program:
+          stopasgroup: "true"
+          killasgroup: "true"
+  - id: "task2"
+    command: "echo 'task 2'"
+```
+
+This will generate:
+
+```ini
+[program:my-group-task1]
+directory = /app
+autorestart = true
+autostart = true
+user = www-data
+command = echo 'task 1'
+environment = ...
+stopasgroup = true
+killasgroup = true
+
+[program:my-group-task2]
+directory = /app
+autorestart = true
+autostart = true
+user = www-data
+command = echo 'task 2'
+environment = ...
+```
+
 ### schedule
 
 #### Run
