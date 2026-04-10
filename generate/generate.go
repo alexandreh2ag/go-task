@@ -10,12 +10,12 @@ import (
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/maps"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -113,8 +113,7 @@ func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
 
 	// ordering key to have deterministic results
-	keys := maps.Keys(worker.Envs)
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(worker.Envs))
 
 	for _, varName := range keys {
 		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(worker.Envs[varName], env.GetEnvVars(worker.Envs))))

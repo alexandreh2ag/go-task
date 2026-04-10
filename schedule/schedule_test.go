@@ -538,7 +538,7 @@ func TestStart_ErrorWhenNextTickAfterFailed(t *testing.T) {
 
 	err := Start(ctx, 0, "Europe/Paris", []string{}, true, "")
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), "could not calculate next tick of expr */0 * * * *: tried so hard")
+	assert.Equal(t, err.Error(), "could not calculate next tick of expr */0 * * * *: step can't be 0")
 }
 
 func TestStart_ErrorWhenGetCurrentTimeFailed(t *testing.T) {
