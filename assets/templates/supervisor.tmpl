@@ -9,4 +9,5 @@ autostart = true
 user = {{ .User }}
 command = {{ .Command }}
 environment = {{ envs . }}
-{{ end }}
+{{ range $key, $value := extraParams .Template.ExtraParams "program" }}{{ $key }} = {{ $value }}
+{{ end }}{{ end }}

@@ -345,6 +345,110 @@ func TestGenerate_NoErrorDeleteFile(t *testing.T) {
 	assert.Equal(t, false, fileExist)
 }
 
+func TestTemplateSupervisorFile_WithExtraParams(t *testing.T) {
+	ctx := context.TestContext(io.Discard)
+	groupName := "test-group"
+	workers := types.WorkerTasks{
+		{
+			Id:        "test",
+			Command:   "fake",
+			GroupName: groupName,
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"FOO": "BAR",
+			},
+			Template: types.WorkerTaskTemplate{
+				ExtraParams: map[string]map[string]string{
+					"program": {
+						"killasgroup": "true",
+						"stopasgroup": "true",
+					},
+				},
+			},
+		},
+		{
+			Id:        "test2",
+			Command:   "fake",
+			GroupName: groupName,
+			User:      "toto",
+			Directory: "/tmp/dir",
+			Envs: map[string]string{
+				"BAR": "FOO",
+			},
+			Template: types.WorkerTaskTemplate{
+				ExtraParams: map[string]map[string]string{},
+			},
+		},
+	}
+
+	expectedOutput := "[group:test-group]\n" +
+		"programs=test-group-test,test-group-test2\n\n\n" +
+		"[program:test-group-test]\n" +
+		"directory = /tmp/dir\n" +
+		"autorestart = true\n" +
+		"autostart = true\n" +
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = FOO=\"BAR\"\n" +
+		"killasgroup = true\n" +
+		"stopasgroup = true\n" +
+		"\n" +
+		"[program:test-group-test2]\n" +
+		"directory = /tmp/dir\n" +
+		"autorestart = true\n" +
+		"autostart = true\n" +
+		"user = toto\n" +
+		"command = fake\n" +
+		"environment = BAR=\"FOO\"\n"
+
+	ctx.Config.Workers = workers
+
+	buffer := bytes.NewBufferString("")
+
+	err := templateSupervisorFile(ctx, buffer, groupName)
+	assert.Equal(t, err, nil)
+
+	assert.Equal(t, expectedOutput, buffer.String())
+}
+
+func TestExtraParams(t *testing.T) {
+	tests := []struct {
+		name    string
+		params  map[string]map[string]string
+		section string
+		want    map[string]string
+	}{
+		{
+			name:    "NilParams",
+			params:  nil,
+			section: "program",
+			want:    nil,
+		},
+		{
+			name:    "SectionNotFound",
+			params:  map[string]map[string]string{},
+			section: "program",
+			want:    nil,
+		},
+		{
+			name: "SectionFound",
+			params: map[string]map[string]string{
+				"program": {"stopasgroup": "true"},
+			},
+			section: "program",
+			want:    map[string]string{"stopasgroup": "true"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extraParams(tt.params, tt.section)
+			assert.Equal(t, tt.want, result)
+		})
+	}
+}
+
 func TestGenerateEnvVars(t *testing.T) {
 	groupName := "group"
 

@@ -10,12 +10,12 @@ import (
 	"github.com/alexandreh2ag/go-task/types"
 	"github.com/alexandreh2ag/go-task/version"
 	"github.com/spf13/afero"
-	"golang.org/x/exp/maps"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -72,11 +72,12 @@ func templateSupervisorFile(ctx *context.Context, writer io.Writer, groupName st
 	}
 
 	extraVars := template.FuncMap{
-		"now":       time.Now,
-		"version":   version.GetFormattedVersion,
-		"groupName": func() string { return groupName },
-		"programs":  generateProgramList,
-		"envs":      generateEnvVars,
+		"now":         time.Now,
+		"version":     version.GetFormattedVersion,
+		"groupName":   func() string { return groupName },
+		"programs":    generateProgramList,
+		"envs":        generateEnvVars,
+		"extraParams": extraParams,
 	}
 
 	tmpl, err := template.New("supervisor.tmpl").Funcs(extraVars).Parse(string(supervisorTemplateContent))
@@ -112,13 +113,19 @@ func generateEnvVars(worker types.WorkerTask) string {
 	envVars := []string{}
 
 	// ordering key to have deterministic results
-	keys := maps.Keys(worker.Envs)
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(worker.Envs))
 
 	for _, varName := range keys {
 		envVars = append(envVars, fmt.Sprintf(`%s="%s"`, varName, os.Expand(worker.Envs[varName], env.GetEnvVars(worker.Envs))))
 	}
 	return strings.Join(envVars, ",")
+}
+
+func extraParams(params map[string]map[string]string, section string) map[string]string {
+	if params == nil {
+		return nil
+	}
+	return params[section]
 }
 
 func deleteFile(ctx *context.Context, path string) error {
